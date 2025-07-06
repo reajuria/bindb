@@ -69,18 +69,29 @@ export class Table {
     const handle = await fs.open(this.dataFilePath, 'r');
     const stat = await handle.stat();
     const size = stat.size;
-    let i = 0;
-    for (let p = 0; p < size; p += this.bufferSchema.size) {
-      const nullRowFlag = await handle.read(Buffer.alloc(1), 0, 1, p);
-      if (nullRowFlag === RowStatus.Deleted) {
-        this.idMap[i] = null;
+    let slot = 0;
+    for (let pos = 0; pos < size; pos += this.bufferSchema.size) {
+      const { buffer: flagBuffer } = await handle.read(
+        Buffer.alloc(1),
+        0,
+        1,
+        pos
+      );
+      const rowFlag = flagBuffer.readUInt8(0);
+      if (rowFlag === RowStatus.Deleted) {
+        this.idMap[slot] = null;
       } else {
-        const size = this.bufferSchema.schema[ID_FIELD].nullFlag + 1;
-        const { buffer } = await handle.read(Buffer.alloc(size), 0, size, p);
+        const idSize = this.bufferSchema.schema[ID_FIELD].nullFlag + 1;
+        const { buffer } = await handle.read(
+          Buffer.alloc(idSize),
+          0,
+          idSize,
+          pos
+        );
         const id = readColumn(buffer, this.bufferSchema, ID_FIELD);
-        this.idMap[i] = id;
+        this.idMap[slot] = id;
       }
-      i++;
+      slot++;
     }
 
     console.log(
@@ -88,6 +99,22 @@ export class Table {
     );
 
     await handle.close();
+  }
+
+  async get(id) {
+    const slot = this.idMap.findIndex((entry) => entry === id);
+    if (slot === -1) {
+      return null;
+    }
+    const handle = await fs.open(this.dataFilePath, 'r');
+    const { buffer } = await handle.read(
+      Buffer.alloc(this.bufferSchema.size),
+      0,
+      this.bufferSchema.size,
+      this.getOffset(slot + 1)
+    );
+    await handle.close();
+    return parseDataRow(this.bufferSchema, buffer);
   }
 
   getOffset(slot) {
