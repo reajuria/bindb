@@ -5,6 +5,87 @@ import {
   UNIQUE_IDENTIFIER_SIZE,
 } from './constants.js';
 
+// Write handlers for each column type
+const writeHandlers = {
+  [Types.UniqueIdentifier]: (buffer, column, value) => {
+    buffer.write(value, column.offset, UNIQUE_IDENTIFIER_SIZE, 'hex');
+  },
+  [Types.Text]: (buffer, column, value) => {
+    const length = value.length;
+    buffer.writeUInt16BE(length, column.offset);
+    if (length > 0) {
+      buffer.write(
+        value,
+        column.offset + UINT16_SIZE,
+        column.size - UINT16_SIZE,
+        'utf8'
+      );
+    }
+  },
+  [Types.Number]: (buffer, column, value) => {
+    buffer.writeDoubleBE(value, column.offset);
+  },
+  [Types.Date]: (buffer, column, value) => {
+    const date = value instanceof Date ? value : new Date(value);
+    buffer.writeDoubleBE(date.getTime(), column.offset);
+  },
+  [Types.UpdatedAt]: (buffer, column, value) => {
+    const date = new Date();
+    buffer.writeDoubleBE(date.getTime(), column.offset);
+  },
+  [Types.Boolean]: (buffer, column, value) => {
+    buffer.writeUInt8(value ? 1 : 0, column.offset);
+  },
+  [Types.Buffer]: (buffer, column, value) => {
+    value?.copy(buffer, column.offset, 0, column.size - 1);
+  },
+  [Types.Coordinates]: (buffer, column, value) => {
+    buffer.writeDoubleBE(value.lat, column.offset);
+    buffer.writeDoubleBE(value.lng, column.offset + DOUBLE_SIZE);
+  },
+};
+
+// Read handlers for each column type
+const readHandlers = {
+  [Types.UniqueIdentifier]: (buffer, column) => {
+    return buffer
+      .slice(column.offset, column.offset + UNIQUE_IDENTIFIER_SIZE)
+      .toString('hex');
+  },
+  [Types.Text]: (buffer, column) => {
+    const length = buffer.readUInt16BE(column.offset);
+    const text = buffer.slice(
+      column.offset + UINT16_SIZE,
+      column.offset + UINT16_SIZE + length
+    );
+    return text.toString('utf8');
+  },
+  [Types.Number]: (buffer, column) => {
+    return buffer.readDoubleBE(column.offset);
+  },
+  [Types.Date]: (buffer, column) => {
+    const date = buffer.readDoubleBE(column.offset);
+    return new Date(date);
+  },
+  [Types.UpdatedAt]: (buffer, column) => {
+    const date = buffer.readDoubleBE(column.offset);
+    return new Date(date);
+  },
+  [Types.Boolean]: (buffer, column) => {
+    return buffer.readUInt8(column.offset) === 1;
+  },
+  [Types.Buffer]: (buffer, column) => {
+    return Buffer.from(
+      buffer.slice(column.offset, column.offset + column.size - 1)
+    );
+  },
+  [Types.Coordinates]: (buffer, column) => {
+    const lat = buffer.readDoubleBE(column.offset);
+    const lng = buffer.readDoubleBE(column.offset + DOUBLE_SIZE);
+    return { lat, lng };
+  },
+};
+
 /**
  * Write a value to a buffer
  * @param {Buffer} buffer - The buffer to write to
@@ -36,47 +117,12 @@ export function writeColumn(buffer, bufferSchema, key, value) {
     return;
   }
 
-  switch (column.type) {
-    case Types.UniqueIdentifier:
-      buffer.write(value, column.offset, UNIQUE_IDENTIFIER_SIZE, 'hex');
-      break;
-    case Types.Text:
-      // Handle the case of an empty string
-      const length = value.length;
-      buffer.writeUInt16BE(length, column.offset);
-      if (length > 0) {
-        buffer.write(
-          value,
-          column.offset + UINT16_SIZE,
-          column.size - UINT16_SIZE,
-          'utf8'
-        );
-      }
-      break;
-    case Types.Number:
-      buffer.writeDoubleBE(value, column.offset);
-      break;
-    case Types.Date:
-    case Types.UpdatedAt:
-      const dateInput = column.type === Types.Date ? value : new Date();
-      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-      buffer.writeDoubleBE(date.getTime(), column.offset);
-      break;
-    case Types.Boolean:
-      buffer.writeUInt8(value ? 1 : 0, column.offset);
-      break;
-    case Types.Buffer:
-      value?.copy(buffer, column.offset, 0, column.size - 1);
-      break;
-    case Types.Coordinates:
-      buffer.writeDoubleBE(value.lat, column.offset);
-      buffer.writeDoubleBE(value.lng, column.offset + DOUBLE_SIZE);
-      break;
-    default:
-      throw new Error(`Unknown column type: ${column.type}`);
+  const handler = writeHandlers[column.type];
+  if (!handler) {
+    throw new Error(`Unknown column type: ${column.type}`);
   }
 
-  return;
+  handler(buffer, column, value);
 }
 
 /**
@@ -96,37 +142,10 @@ export function readColumn(buffer, bufferSchema, key) {
     return null;
   }
 
-  switch (column.type) {
-    case Types.UniqueIdentifier:
-      return buffer
-        .slice(column.offset, column.offset + UNIQUE_IDENTIFIER_SIZE)
-        .toString('hex');
-    case Types.Text:
-      const length = buffer.readUInt16BE(column.offset);
-      const text = buffer.slice(
-        column.offset + UINT16_SIZE,
-        column.offset + UINT16_SIZE + length
-      );
-      return text.toString('utf8');
-    case Types.Number:
-      return buffer.readDoubleBE(column.offset);
-    case Types.Date:
-      const date = buffer.readDoubleBE(column.offset);
-      return new Date(date);
-    case Types.Boolean:
-      return buffer.readUInt8(column.offset) === 1;
-    case Types.Buffer:
-      return Buffer.from(
-        buffer.slice(column.offset, column.offset + column.size - 1)
-      );
-    case Types.Coordinates:
-      const lat = buffer.readDoubleBE(column.offset);
-      const lng = buffer.readDoubleBE(column.offset + DOUBLE_SIZE);
-      return {
-        lat,
-        lng,
-      };
-    default:
-      throw new Error(`Unknown column type: ${column.type}`);
+  const handler = readHandlers[column.type];
+  if (!handler) {
+    throw new Error(`Unknown column type: ${column.type}`);
   }
+
+  return handler(buffer, column);
 }

@@ -1,6 +1,5 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { Table } from './table.js';
+import { DatabaseFileManager } from './database-file-manager.js';
 
 export class Database {
   static async create(storageBasePath, name) {
@@ -17,12 +16,13 @@ export class Database {
     this.storageBasePath = storageBasePath;
     this.name = name;
 
-    this.databaseBasePath = path.join(this.storageBasePath, this.name);
-
-    this.metadataFilePath = path.join(
-      this.databaseBasePath,
-      'db_metadata.json'
-    );
+    // Initialize database file manager
+    this.fileManager = new DatabaseFileManager(storageBasePath, name);
+    
+    // Get paths from file manager
+    const paths = this.fileManager.getPaths();
+    this.databaseBasePath = paths.databaseBasePath;
+    this.metadataFilePath = paths.metadataFilePath;
 
     /** @type {Map<string, import('./table').Table>} */
     this.tables = new Map();
@@ -33,29 +33,13 @@ export class Database {
   }
 
   async initDatabase() {
-    const dbDirExists = await fs.access(this.databaseBasePath).then(
-      () => true,
-      () => false
-    );
-    if (!dbDirExists) {
-      await fs.mkdir(this.databaseBasePath, { recursive: true });
-    }
-
-    const metadataFileExists = await fs.access(this.metadataFilePath).then(
-      () => true,
-      () => false
-    );
-    if (!metadataFileExists) {
-      await fs.writeFile(this.metadataFilePath, JSON.stringify(this.metadata));
-    }
-
+    await this.fileManager.initializeDatabase(this.metadata);
     await this.loadMetadata();
   }
 
   async loadMetadata() {
-    const metadata = JSON.parse(
-      await fs.readFile(this.metadataFilePath, 'utf8')
-    );
+    const metadata = await this.fileManager.readMetadata();
+    
     this.metadata = {
       ...this.metadata,
       ...metadata,
@@ -75,15 +59,14 @@ export class Database {
   }
 
   async saveMetadata() {
-    await fs.writeFile(
-      this.metadataFilePath,
-      JSON.stringify({
-        ...this.metadata,
-        tables: this.metadata.tables.map((table) => ({
-          ...table,
-        })),
-      })
-    );
+    const metadataToSave = {
+      ...this.metadata,
+      tables: this.metadata.tables.map((table) => ({
+        ...table,
+      })),
+    };
+    
+    await this.fileManager.writeMetadata(metadataToSave);
   }
 
   /**
@@ -110,5 +93,13 @@ export class Database {
 
   table(name) {
     return this.tables.get(name);
+  }
+
+  async close() {
+    // Close all tables
+    for (const table of this.tables.values()) {
+      await table.close();
+    }
+    this.tables.clear();
   }
 }

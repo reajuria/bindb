@@ -5,12 +5,12 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "benchmark": "node benchmarks/scalability.js",
+    "benchmark:quick": "node benchmarks/index.js --quick"
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
-  "dependencies": {
-    "lodash": "^4.17.21"
-  }
+  "dependencies": {}
 }

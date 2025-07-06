@@ -1,4 +1,5 @@
 import { Types } from './column.js';
+import { strHash } from './util.js';
 
 export class Schema {
   /**
@@ -32,6 +33,8 @@ export class Schema {
     this._database = '';
     this._table = '';
     this._columns = [];
+    this._tableHash = null;
+    this._tableHashBuffer = null;
   }
 
   get columns() {
@@ -48,10 +51,12 @@ export class Schema {
 
   set database(database) {
     this._database = database;
+    this._invalidateTableHash();
   }
 
   set table(table) {
     this._table = table;
+    this._invalidateTableHash();
   }
 
   addColumn(column) {
@@ -68,6 +73,37 @@ export class Schema {
       type,
       length,
     });
+  }
+
+  /**
+   * Get the cached table hash for uniqueId generation
+   * Computes once and caches for performance
+   */
+  get tableHash() {
+    if (!this._tableHash && this._database && this._table) {
+      this._tableHash = strHash(4, this._database, this._table);
+    }
+    return this._tableHash;
+  }
+
+  /**
+   * Get the cached table hash buffer for uniqueId generation
+   * Pre-computed Buffer for maximum performance
+   */
+  get tableHashBuffer() {
+    if (!this._tableHashBuffer && this.tableHash) {
+      this._tableHashBuffer = Buffer.from(this.tableHash, 'hex');
+    }
+    return this._tableHashBuffer;
+  }
+
+  /**
+   * Invalidate cached hash when database/table changes
+   * @private
+   */
+  _invalidateTableHash() {
+    this._tableHash = null;
+    this._tableHashBuffer = null;
   }
 
   toJSON() {

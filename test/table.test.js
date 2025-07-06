@@ -20,6 +20,9 @@ test('insert and read row', async () => {
   const { dir, db } = await createTempDB();
   const table = db.table('items');
   const inserted = await table.insert({ name: 'foo' });
+  
+  // Flush buffered data to disk
+  await table.flush();
 
   const db2 = new Database(dir, 'testdb');
   await db2.initDatabase();
