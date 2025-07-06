@@ -13,16 +13,25 @@ async function createTempDir() {
 
 test('database metadata persistence', async () => {
   const dir = await createTempDir();
-  const db = await Database.create(dir, 'testdb');
-  const schema = Schema.create('testdb', 'items', [
-    { name: 'name', type: Types.Text, length: 10 },
-  ]);
-  await db.createTable('items', schema);
-  const metadataPath = path.join(dir, 'testdb', 'db_metadata.json');
-  const stat = await fs.stat(metadataPath);
-  assert.ok(stat.isFile());
+  let db, db2;
+  
+  try {
+    db = await Database.create(dir, 'testdb');
+    const schema = Schema.create('testdb', 'items', [
+      { name: 'name', type: Types.Text, length: 10 },
+    ]);
+    await db.createTable('items', schema);
+    const metadataPath = path.join(dir, 'testdb', 'db_metadata.json');
+    const stat = await fs.stat(metadataPath);
+    assert.ok(stat.isFile());
 
-  const db2 = new Database(dir, 'testdb');
-  await db2.initDatabase();
-  assert.ok(db2.table('items'));
+    db2 = new Database(dir, 'testdb');
+    await db2.initDatabase();
+    assert.ok(db2.table('items'));
+  } finally {
+    // Cleanup file handles and temp directory
+    await db?.close();
+    await db2?.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
 });
