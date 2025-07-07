@@ -83,13 +83,13 @@ test('write buffer behavior', async () => {
     assert.deepEqual(row, inserted);
     
     // Verify buffer stats
-    const stats = table.writeBuffer.getStats();
+    const stats = table.getWriteBufferStats();
     assert.ok(stats.recordCount >= 0);
     assert.ok(stats.bufferSize >= 0);
     
     // Manual flush
     await table.flush();
-    const statsAfterFlush = table.writeBuffer.getStats();
+    const statsAfterFlush = table.getWriteBufferStats();
     assert.equal(statsAfterFlush.recordCount, 0); // Should be empty after flush
     
   } finally {
@@ -115,7 +115,7 @@ test('cache functionality', async () => {
     assert.deepEqual(row2, inserted);
     
     // Check cache statistics
-    const cacheStats = table.readCache.getStats();
+    const cacheStats = table.getReadCacheStats();
     assert.ok(cacheStats.size >= 0);
     assert.ok(cacheStats.maxSize > 0);
     
@@ -204,7 +204,7 @@ test('slot reuse after deletion', async () => {
     
     // Check that slot is marked as free
     const stats = table.getStats();
-    assert.equal(stats.freeSlots, 1);
+    assert.equal(stats.slots.freeSlots, 1);
     
     // Insert new record (should reuse slot)
     const inserted3 = await table.insert({ name: 'third' });

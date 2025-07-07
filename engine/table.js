@@ -1,18 +1,18 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import {
   RowStatus,
   dataRowToBufferWithGenerated,
-  parseBufferSchema,
   parseDataRow,
 } from './row.js';
-import { Schema } from './schema.js';
 import { readColumn } from './buffer-utils.js';
 import { ID_FIELD } from './constants.js';
-import { LRUCache } from './lru-cache.js';
-import { FileManager } from './file-manager.js';
-import { WriteBuffer } from './write-buffer.js';
+import { SlotManager } from './slot-manager.js';
+import { TableStorageManager } from './table-storage-manager.js';
+import { TableCacheManager } from './table-cache-manager.js';
+import { TableMetrics } from './table-metrics.js';
 
+/**
+ * Table - Orchestrates table operations using specialized managers
+ */
 export class Table {
   /**
    * @param {string} storageBasePath
@@ -20,36 +20,22 @@ export class Table {
    * @param {string} name
    */
   constructor(storageBasePath, database, name) {
-    this.storageBasePath = storageBasePath;
     this.database = database;
     this.name = name;
-    this.idMap = [];
-    this.idToSlot = new Map(); // Reverse lookup: id -> slot index  
-    this.freeSlots = []; // Stack of available slots for reuse
 
-    this.schemaFilePath = path.join(
-      this.storageBasePath,
-      database.name,
-      `${name}.schema.json`
-    );
-
-    this.dataFilePath = path.join(
-      this.storageBasePath,
-      database.name,
-      `${name}.data`
-    );
-
-    // Initialize extracted components
-    this.readCache = new LRUCache(1000); // Cache up to 1000 records
-    this.fileManager = new FileManager(this.dataFilePath);
-    this.writeBuffer = new WriteBuffer({
+    // Initialize specialized managers
+    this.slotManager = new SlotManager();
+    this.storageManager = new TableStorageManager(storageBasePath, database.name, name);
+    this.metrics = new TableMetrics();
+    
+    // Initialize cache manager with write callback
+    this.cacheManager = new TableCacheManager({
+      readCacheSize: 1000,
       maxBufferSize: 50 * 1024 * 1024, // 50MB
-      maxBufferRecords: 10000 // 10k records
-    });
-
-    // Set up write buffer flush callback
-    this.writeBuffer.setFlushCallback(async (writes) => {
-      await this.fileManager.writeMultiple(writes);
+      maxBufferRecords: 10000,         // 10k records
+      writeFlushCallback: async (writes) => {
+        await this.storageManager.writeData(writes);
+      }
     });
   }
 
@@ -58,116 +44,109 @@ export class Table {
    * @returns {Promise<void>}
    */
   async initTable(schema) {
-    schema.database = this.database.name;
-    schema.table = this.name;
-    await fs.writeFile(this.schemaFilePath, JSON.stringify(schema.toJSON()));
-    await FileManager.ensureFile(this.dataFilePath);
-    await this.loadSchema();
+    await this.storageManager.initTable(schema);
   }
 
   async loadSchema(force = false) {
-    if (this.schema && !force) {
-      return;
-    }
-    const schema = Schema.fromJSON(
-      JSON.parse(await fs.readFile(this.schemaFilePath, 'utf8'))
-    );
-    this.schema = schema;
-    this.bufferSchema = parseBufferSchema(schema);
+    await this.storageManager.loadSchema(force);
   }
 
   async loadTable() {
     await this.loadSchema();
-    const stat = await this.fileManager.stat();
+    const stat = await this.storageManager.getFileStats();
     const size = stat.size;
-    let slot = 0;
-    this.freeSlots = []; // Reset free slots
-    this.idToSlot.clear(); // Reset reverse lookup
+    const bufferSchema = this.storageManager.getBufferSchema();
     
-    for (let pos = 0; pos < size; pos += this.bufferSchema.size) {
-      const flagBuffer = await this.fileManager.read(1, pos);
+    let slot = 0;
+    const slotData = [];
+    
+    for (let pos = 0; pos < size; pos += bufferSchema.size) {
+      const flagBuffer = await this.storageManager.readData(1, pos);
       const rowFlag = flagBuffer.readUInt8(0);
+      
       if (rowFlag === RowStatus.Deleted) {
-        this.idMap[slot] = null;
-        this.freeSlots.push(slot); // Track deleted slots for reuse
+        slotData.push({ slot, id: null });
       } else {
-        const idSize = this.bufferSchema.schema[ID_FIELD].nullFlag + 1;
-        const buffer = await this.fileManager.read(idSize, pos);
-        const id = readColumn(buffer, this.bufferSchema, ID_FIELD);
-        this.idMap[slot] = id;
-        this.idToSlot.set(id, slot); // Build reverse lookup
+        const idSize = bufferSchema.schema[ID_FIELD].nullFlag + 1;
+        const buffer = await this.storageManager.readData(idSize, pos);
+        const id = readColumn(buffer, bufferSchema, ID_FIELD);
+        slotData.push({ slot, id });
       }
       slot++;
     }
 
+    // Load slot data into slot manager
+    this.slotManager.loadSlots(slotData);
+
     console.log(
-      `Loaded ${this.name} with ${this.idMap.filter((id) => id).length} rows`
+      `Loaded ${this.name} with ${this.slotManager.getStats().activeSlots} rows`
     );
   }
 
   async get(id) {
-    const slot = this.idToSlot.get(id);
+    const startTime = performance.now();
+    const slot = this.slotManager.getSlot(id);
+    
     if (slot === undefined) {
+      this.metrics.recordRead(performance.now() - startTime, false);
       return null;
     }
     
-    // Check read cache first (fastest)
-    const cached = this.readCache.get(id);
-    if (cached !== undefined) {
-      return cached;
+    // Check cache first
+    const cacheHit = this.cacheManager.checkCache(id, slot + 1);
+    if (cacheHit) {
+      if (cacheHit.source === 'readCache') {
+        this.metrics.recordRead(performance.now() - startTime, true);
+        return cacheHit.data;
+      } else {
+        // Parse data from write buffer
+        const bufferSchema = this.storageManager.getBufferSchema();
+        const data = parseDataRow(bufferSchema, cacheHit.data.buffer);
+        this.cacheManager.setInReadCache(id, data);
+        this.metrics.recordRead(performance.now() - startTime, true);
+        return data;
+      }
     }
     
-    // Check if data is in write buffer second
-    const bufferedData = this.writeBuffer.get(slot + 1);
-    if (bufferedData) {
-      const data = parseDataRow(this.bufferSchema, bufferedData.buffer);
-      this.readCache.set(id, data);
-      return data;
-    }
-    
-    // Read from disk using FileManager
-    const buffer = await this.fileManager.read(
-      this.bufferSchema.size,
-      this.getOffset(slot + 1)
+    // Read from disk
+    const bufferSchema = this.storageManager.getBufferSchema();
+    const buffer = await this.storageManager.readData(
+      bufferSchema.size,
+      this.storageManager.getOffset(slot + 1)
     );
     
-    const data = parseDataRow(this.bufferSchema, buffer);
-    this.readCache.set(id, data);
+    const data = parseDataRow(bufferSchema, buffer);
+    this.cacheManager.setInReadCache(id, data);
+    this.metrics.recordRead(performance.now() - startTime, false);
     
     return data;
   }
 
-  getOffset(slot) {
-    return (slot === 0 ? 0 : slot - 1) * this.bufferSchema.size;
-  }
-
-  findEmptySlot() {
-    // Reuse a deleted slot if available, otherwise append new slot
-    return this.freeSlots.length > 0 
-      ? this.freeSlots.pop() + 1  // Convert to 1-based index
-      : this.idMap.length + 1;    // Append new slot
-  }
-
   async insert(row) {
-    const { buffer, generatedValues } = dataRowToBufferWithGenerated(this.bufferSchema, row);
-    const slot = this.findEmptySlot();
+    const startTime = performance.now();
+    const bufferSchema = this.storageManager.getBufferSchema();
+    const { buffer, generatedValues } = dataRowToBufferWithGenerated(bufferSchema, row);
     
     // Merge input with generated values (efficient - no parsing!)
     const resultData = { ...row, ...generatedValues };
+    const id = resultData[ID_FIELD];
     
-    // Update in-memory structures immediately
-    this.idMap[slot - 1] = resultData[ID_FIELD];
-    this.idToSlot.set(resultData[ID_FIELD], slot - 1);
+    // Allocate slot
+    const slot = this.slotManager.allocateSlot(id);
     
     // Add to write buffer (auto-flush handled internally)
-    await this.writeBuffer.add(slot, buffer, this.getOffset(slot));
+    await this.cacheManager.addToWriteBuffer(
+      slot + 1, 
+      buffer, 
+      this.storageManager.getOffset(slot + 1)
+    );
     
+    this.metrics.recordWrite(performance.now() - startTime);
     return resultData;
   }
 
   /**
    * Insert multiple records in a single optimized operation
-   * Uses Promise.all for optimal performance while maintaining proper API usage
    * @param {Array<object>} rows - Array of row objects to insert
    * @returns {Promise<Array<object>>} Array of inserted records with generated IDs
    */
@@ -176,36 +155,35 @@ export class Table {
       return [];
     }
 
+    const startTime = performance.now();
+    const bufferSchema = this.storageManager.getBufferSchema();
     const results = [];
     const writeOperations = [];
     
-    // Phase 1: Prepare all data and in-memory updates
+    // Phase 1: Prepare all data and allocate slots
     for (let i = 0; i < rows.length; i++) {
-      const slot = this.findEmptySlot();
-      const { buffer, generatedValues } = dataRowToBufferWithGenerated(this.bufferSchema, rows[i]);
-      
-      // Merge input with generated values (efficient - no parsing!)
+      const { buffer, generatedValues } = dataRowToBufferWithGenerated(bufferSchema, rows[i]);
       const resultData = { ...rows[i], ...generatedValues };
+      const id = resultData[ID_FIELD];
+      
+      // Allocate slot
+      const slot = this.slotManager.allocateSlot(id);
       
       results.push(resultData);
       writeOperations.push({
-        slot,
+        slot: slot + 1,
         buffer,
-        position: this.getOffset(slot)
+        position: this.storageManager.getOffset(slot + 1)
       });
-      
-      // Update in-memory structures immediately
-      this.idMap[slot - 1] = resultData[ID_FIELD];
-      this.idToSlot.set(resultData[ID_FIELD], slot - 1);
     }
 
-    // Phase 2: Batch add all operations to write buffer using Promise.all
-    // This approach maintains proper API usage for future indexing compatibility
+    // Phase 2: Batch add all operations to write buffer
     const promises = writeOperations.map(op => 
-      this.writeBuffer.add(op.slot, op.buffer, op.position)
+      this.cacheManager.addToWriteBuffer(op.slot, op.buffer, op.position)
     );
     
     await Promise.all(promises);
+    this.metrics.recordWrite(performance.now() - startTime);
 
     return results;
   }
@@ -217,32 +195,40 @@ export class Table {
    * @returns {Promise<object|null>} Updated record or null if not found
    */
   async update(id, updates) {
-    const slot = this.idToSlot.get(id);
+    const startTime = performance.now();
+    const slot = this.slotManager.getSlot(id);
+    
     if (slot === undefined) {
+      this.metrics.recordUpdate(performance.now() - startTime);
       return null;
     }
     
     // Get current record
     const current = await this.get(id);
     if (!current) {
+      this.metrics.recordUpdate(performance.now() - startTime);
       return null;
     }
     
     // Merge updates with current data
     const updated = { ...current, ...updates };
-    
-    // Preserve the original ID (cannot be updated)
-    updated[ID_FIELD] = id;
+    updated[ID_FIELD] = id; // Preserve the original ID
     
     // Create new buffer with updated data
-    const { buffer } = dataRowToBufferWithGenerated(this.bufferSchema, updated);
+    const bufferSchema = this.storageManager.getBufferSchema();
+    const { buffer } = dataRowToBufferWithGenerated(bufferSchema, updated);
     
-    // Clear from read cache to ensure fresh data on next read
-    this.readCache.delete(id);
+    // Invalidate cache
+    this.cacheManager.invalidateRecord(id);
     
     // Update via write buffer
-    await this.writeBuffer.add(slot + 1, buffer, this.getOffset(slot + 1));
+    await this.cacheManager.addToWriteBuffer(
+      slot + 1, 
+      buffer, 
+      this.storageManager.getOffset(slot + 1)
+    );
     
+    this.metrics.recordUpdate(performance.now() - startTime);
     return updated;
   }
 
@@ -252,42 +238,49 @@ export class Table {
    * @returns {Promise<boolean>} True if deleted, false if not found
    */
   async delete(id) {
-    const slot = this.idToSlot.get(id);
+    const startTime = performance.now();
+    const slot = this.slotManager.getSlot(id);
+    
     if (slot === undefined) {
+      this.metrics.recordDelete(performance.now() - startTime);
       return false;
     }
     
     // Create a buffer with deleted row status
-    const buffer = Buffer.alloc(this.bufferSchema.size);
+    const bufferSchema = this.storageManager.getBufferSchema();
+    const buffer = Buffer.alloc(bufferSchema.size);
     buffer.writeUInt8(RowStatus.Deleted, 0);
     
-    // Update in-memory structures
-    this.idMap[slot] = null;
-    this.idToSlot.delete(id);
-    this.freeSlots.push(slot); // Mark slot as available for reuse
+    // Deallocate slot
+    this.slotManager.deallocateSlot(id);
     
-    // Clear from read cache
-    this.readCache.delete(id);
+    // Invalidate cache
+    this.cacheManager.invalidateRecord(id);
     
     // Write deletion marker to disk
-    await this.writeBuffer.add(slot + 1, buffer, this.getOffset(slot + 1));
+    await this.cacheManager.addToWriteBuffer(
+      slot + 1, 
+      buffer, 
+      this.storageManager.getOffset(slot + 1)
+    );
     
+    this.metrics.recordDelete(performance.now() - startTime);
     return true;
   }
 
   async flush() {
-    await this.writeBuffer.flush();
+    await this.cacheManager.flushWrites();
   }
 
   async close() {
     // Ensure all data is written before closing
     await this.flush();
     
-    // Close file manager (handles both read and write handles)
-    await this.fileManager.close();
+    // Close storage manager
+    await this.storageManager.close();
     
-    // Clear read cache
-    this.readCache.clear();
+    // Clear caches
+    this.cacheManager.clearAll();
   }
 
   /**
@@ -295,12 +288,10 @@ export class Table {
    * @returns {object} Performance statistics
    */
   getStats() {
-    return {
-      records: this.idMap.filter(id => id).length,
-      freeSlots: this.freeSlots.length,
-      cache: this.readCache.getStats(),
-      writeBuffer: this.writeBuffer.getStats()
-    };
+    return this.metrics.getComprehensiveStats(
+      this.slotManager.getStats(),
+      this.cacheManager.getStats()
+    );
   }
 
   /**
@@ -308,7 +299,7 @@ export class Table {
    * @returns {object} Write buffer stats
    */
   getWriteBufferStats() {
-    return this.writeBuffer.getStats();
+    return this.cacheManager.getWriteBufferStats();
   }
 
   /**
@@ -316,7 +307,7 @@ export class Table {
    * @returns {object} Read cache stats
    */
   getReadCacheStats() {
-    return this.readCache.getStats();
+    return this.cacheManager.getReadCacheStats();
   }
 
   /**
@@ -325,15 +316,15 @@ export class Table {
    */
   async getAll() {
     const results = [];
-    for (let i = 0; i < this.idMap.length; i++) {
-      const id = this.idMap[i];
-      if (id) {
-        const record = await this.get(id);
-        if (record) {
-          results.push(record);
-        }
+    const activeIds = this.slotManager.getActiveIds();
+    
+    for (const id of activeIds) {
+      const record = await this.get(id);
+      if (record) {
+        results.push(record);
       }
     }
+    
     return results;
   }
 }

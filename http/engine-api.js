@@ -22,7 +22,11 @@ export class EngineAPI {
       
       try {
         const result = await this.dbManager.insertOne(database, table, record);
-        return { insertedId: result.id, record: result };
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
+        return { insertedId: result.insertedId, record: result.record };
       } catch (error) {
         return { error: error.message };
       }
@@ -37,11 +41,15 @@ export class EngineAPI {
       }
       
       try {
-        const results = await this.dbManager.insertMany(database, table, records);
+        const result = await this.dbManager.insertMany(database, table, records);
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
         return { 
-          insertedIds: results.map(record => record.id),
-          insertedCount: results.length,
-          records: results
+          insertedIds: result.insertedIds,
+          insertedCount: result.insertedCount,
+          records: result.records
         };
       } catch (error) {
         return { error: error.message };
@@ -58,7 +66,11 @@ export class EngineAPI {
       
       try {
         const result = await this.dbManager.findOne(database, table, { id });
-        return { record: result };
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
+        return { record: result.record };
       } catch (error) {
         return { error: error.message };
       }
@@ -74,7 +86,15 @@ export class EngineAPI {
       
       try {
         const result = await this.dbManager.updateOne(database, table, { id }, update);
-        return result;
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
+        return {
+          matchedCount: result.matchedCount,
+          modifiedCount: result.modifiedCount,
+          record: result.record
+        };
       } catch (error) {
         return { error: error.message };
       }
@@ -90,7 +110,14 @@ export class EngineAPI {
       
       try {
         const result = await this.dbManager.deleteOne(database, table, { id });
-        return result;
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
+        return {
+          deletedCount: result.deletedCount,
+          acknowledged: result.acknowledged
+        };
       } catch (error) {
         return { error: error.message };
       }
@@ -105,8 +132,12 @@ export class EngineAPI {
       }
       
       try {
-        const count = await this.dbManager.countRecords(database, table);
-        return { count };
+        const result = await this.dbManager.countRecords(database, table);
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
+        return { count: result.count };
       } catch (error) {
         return { error: error.message };
       }
@@ -122,7 +153,11 @@ export class EngineAPI {
       
       try {
         const result = await this.dbManager.createTable(database, table, schema);
-        return { table: result };
+        // Handle formatted response from ResultFormatter
+        if (result.error) {
+          return { error: result.error };
+        }
+        return { table: result.table };
       } catch (error) {
         return { error: error.message };
       }

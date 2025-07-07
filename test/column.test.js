@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { uniqueId, uniqueIdDate } from '../engine/column.js';
+import { uniqueId, uniqueIdDate } from '../engine/id-generator.js';
 
 test('uniqueId length and date extraction', () => {
   const id = uniqueId('foo');

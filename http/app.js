@@ -1,231 +1,223 @@
 import { createServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { RequestParser } from './request-parser.js';
+import { RouteResolver } from './route-resolver.js';
+import { ResponseFormatter } from './response-formatter.js';
+import { CORSHandler } from './cors-handler.js';
 
+/**
+ * App - HTTP server framework with routing capabilities
+ */
 export class App {
-  /** @type {Map<string, (req: {reqId: string; query: any; body: any;}) => Promise<object>>} */
-  handlers = new Map();
-  paths = new Set();
+  constructor(options = {}) {
+    // Initialize specialized components
+    this.requestParser = new RequestParser();
+    this.routeResolver = new RouteResolver();
+    this.responseFormatter = new ResponseFormatter();
+    this.corsHandler = new CORSHandler(options.cors || {});
+    
+    /** @type {import('node:http').Server} */
+    this.server = undefined;
 
-  /** @type {import('node:http').Server} */
-  server = undefined;
+    this._createServer();
+  }
 
-  constructor() {
-    // Create an HTTP server
+  /**
+   * Create and configure the HTTP server
+   * @private
+   */
+  _createServer() {
     this.server = createServer();
 
-    // Listen for requests and parse URL
     this.server.on('request', async (req, res) => {
       try {
-        const url = new URL(req.url, `http://${req.headers.host}`);
-
-        // Form a key for the handlers map
-        const key = `${req.method}:${url.pathname}`;
-        let handler = this.handlers.get(key);
-        const origin = req.headers['origin'] || req.headers['Origin'] || '*';
-        let params;
-
-        for (const [key, value] of this.handlers.entries()) {
-          // const [method, path] = key.split(':');
-          const method = key.split(':')[0];
-          const path = key.replace(`${method}:`, '');
-          const { match, params: routeParams } = this.parseRouteParams(
-            url.pathname,
-            path
-          );
-          if (req.method === method && match) {
-            handler = value;
-            params = routeParams;
-            break;
-          }
-        }
-
-        if (
-          req.method === 'OPTIONS' &&
-          (this.paths.has(url.pathname) || !!handler)
-        ) {
-          res.writeHead(200, {
-            'Access-Control-Allow-Origin': origin,
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Max-Age': '86400',
-          });
-          res.end();
-          return;
-        }
-
-        if (handler) {
-          const reqLocals = {
-            reqId: randomUUID(),
-            url,
-            headers: req.headers,
-            params,
-            query: Object.fromEntries(url.searchParams),
-            body: undefined,
-          };
-
-          // Parse body if necessary
-          if (
-            req.method !== 'GET' &&
-            req.method !== 'HEAD' &&
-            req.method !== 'OPTIONS'
-          ) {
-            try {
-              reqLocals.body = await new Promise((resolve, reject) => {
-                let body = '';
-                req.on('data', (chunk) => {
-                  body += chunk.toString();
-                });
-                req.on('end', () => {
-                  try {
-                    resolve(JSON.parse(body || '{}'));
-                  } catch (error) {
-                    reject(new Error('Invalid JSON'));
-                  }
-                });
-                req.on('error', (error) => {
-                  reject(error);
-                });
-              });
-            } catch (error) {
-              res.writeHead(400, { 'Content-Type': 'text/plain' });
-              res.end(error.message);
-              return;
-            }
-          }
-
-          // Call handler
-          const result = await handler(reqLocals);
-
-          let response = result;
-
-          if (!result) {
-            response = {
-              body: undefined,
-              headers: {
-                'Content-Length': 0,
-              },
-            };
-          } else if (typeof result === 'string') {
-            response = {
-              body: result,
-              headers: {
-                'Content-Type': 'text/html',
-              },
-            };
-          } else if (typeof result === 'object') {
-            response = {
-              body: JSON.stringify(result),
-              headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': origin,
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Max-Age': '86400',
-              },
-            };
-          }
-
-          // Send a response
-          res.writeHead(200, {
-            ...response.headers,
-          });
-
-          res.end(response.body);
-        } else {
-          // No handler found
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.end('Not Found');
-        }
+        await this._handleRequest(req, res);
       } catch (error) {
-        // Send an error
-        // console.error(`Error occurred: ${error.message}`);
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Internal Server Error');
+        this._handleError(error, res);
       }
     });
   }
 
   /**
-   * Parse the URL to match route parameters
-   * @param {string} urlPath URL path
-   * @param {string} routePath Route path
-   * @returns {{match: boolean, params: object}}
+   * Handle incoming HTTP request
+   * @param {import('node:http').IncomingMessage} req - HTTP request
+   * @param {import('node:http').ServerResponse} res - HTTP response
+   * @private
    */
-  parseRouteParams(urlPath, routePath) {
-    const urlSegments = urlPath.split('/');
-    const routeSegments = routePath.split('/');
-    let params = {};
+  async _handleRequest(req, res) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const origin = this.requestParser.getOrigin(req);
 
-    if (urlSegments.length !== routeSegments.length) {
-      return { match: false, params: {} };
+    // Handle CORS preflight requests
+    if (this.corsHandler.isPreflightRequest(req.method, req.headers)) {
+      const preflightResponse = this.corsHandler.createPreflightResponse(origin, req.headers);
+      return this._sendResponse(res, preflightResponse);
     }
 
-    for (let i = 0; i < routeSegments.length; i++) {
-      const routeSegment = routeSegments[i];
-      if (routeSegment.startsWith(':')) {
-        const paramName = routeSegment.substring(1);
-        params[paramName] = urlSegments[i];
-      } else if (routeSegment !== urlSegments[i]) {
-        return { match: false, params: {} };
+    // Resolve route
+    const routeMatch = this.routeResolver.resolveRoute(req.method, url.pathname);
+    
+    if (!routeMatch) {
+      // Check if path exists for OPTIONS handling
+      if (req.method === 'OPTIONS' && this.routeResolver.hasPath(url.pathname)) {
+        const optionsResponse = this.corsHandler.createPreflightResponse(origin, req.headers);
+        return this._sendResponse(res, optionsResponse);
       }
+
+      const notFoundResponse = this.responseFormatter.createNotFoundResponse();
+      return this._sendResponse(res, notFoundResponse);
     }
 
-    return { match: true, params };
-  }
-
-  listen(port) {
-    this.server.listen(port, () =>
-      console.log(`Server listening on port ${port}`)
-    );
+    // Parse request
+    const parsedRequest = await this.requestParser.parseRequest(req, url, routeMatch.params);
+    
+    // Call route handler
+    const handlerResult = await routeMatch.handler(parsedRequest);
+    
+    // Format response
+    let response = this.responseFormatter.formatResponse(handlerResult, origin);
+    
+    // Add CORS headers
+    response = this.corsHandler.addCORSHeaders(response, origin);
+    
+    // Send response
+    this._sendResponse(res, response);
   }
 
   /**
-   * Add a POST handler
-   * @param {string} path Path to register handler for
-   * @param {(req: {reqId: string; query: any; body: any;}) => Promise<object>} handler
+   * Handle request processing errors
+   * @param {Error} error - Error that occurred
+   * @param {import('node:http').ServerResponse} res - HTTP response
+   * @private
+   */
+  _handleError(error, res) {
+    let errorResponse;
+
+    if (error.name === 'RequestParseError') {
+      errorResponse = this.responseFormatter.createBadRequestResponse(error.message);
+    } else {
+      console.error(`Error occurred: ${error.message}`);
+      errorResponse = this.responseFormatter.createInternalErrorResponse();
+    }
+
+    this._sendResponse(res, errorResponse);
+  }
+
+  /**
+   * Send HTTP response
+   * @param {import('node:http').ServerResponse} res - HTTP response
+   * @param {object} response - Response object
+   * @private
+   */
+  _sendResponse(res, response) {
+    const statusCode = response.statusCode || 200;
+    const headers = response.headers || {};
+    
+    res.writeHead(statusCode, headers);
+    res.end(response.body);
+  }
+
+  /**
+   * Start the server
+   * @param {number} port - Port to listen on
+   * @param {Function} callback - Optional callback
+   */
+  listen(port, callback) {
+    this.server.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
+      if (callback) callback();
+    });
+  }
+
+  /**
+   * Stop the server
+   * @param {Function} callback - Optional callback
+   */
+  close(callback) {
+    if (this.server) {
+      this.server.close(callback);
+    }
+  }
+
+  /**
+   * Add a POST route handler
+   * @param {string} path - Route path
+   * @param {Function} handler - Route handler
    */
   post(path, handler) {
-    this.handlers.set(`POST:${path}`, handler);
-    this.paths.add(path);
+    this.routeResolver.addRoute('POST', path, handler);
   }
 
   /**
-   * Add a GET handler
-   * @param {string} path Path to register handler for
-   * @param {(req: {reqId: string; query: any; body: any;}) => Promise<object>} handler
+   * Add a GET route handler
+   * @param {string} path - Route path
+   * @param {Function} handler - Route handler
    */
   get(path, handler) {
-    this.handlers.set(`GET:${path}`, handler);
-    this.paths.add(path);
+    this.routeResolver.addRoute('GET', path, handler);
   }
 
   /**
-   * Add a PUT handler
-   * @param {string} path Path to register handler for
-   * @param {(req: {reqId: string; query: any; body: any;}) => Promise<object>} handler
+   * Add a PUT route handler
+   * @param {string} path - Route path
+   * @param {Function} handler - Route handler
    */
   put(path, handler) {
-    this.handlers.set(`PUT:${path}`, handler);
-    this.paths.add(path);
+    this.routeResolver.addRoute('PUT', path, handler);
   }
 
   /**
-   * Add a DELETE handler
-   * @param {string} path Path to register handler for
-   * @param {(req: {reqId: string; query: any; body: any;}) => Promise<object>} handler
+   * Add a DELETE route handler
+   * @param {string} path - Route path
+   * @param {Function} handler - Route handler
    */
   delete(path, handler) {
-    this.handlers.set(`DELETE:${path}`, handler);
-    this.paths.add(path);
+    this.routeResolver.addRoute('DELETE', path, handler);
   }
 
   /**
-   * Add a PATCH handler
-   * @param {string} path Path to register handler for
-   * @param {(req: {reqId: string; query: any; body: any;}) => Promise<object>} handler
+   * Add a PATCH route handler
+   * @param {string} path - Route path
+   * @param {Function} handler - Route handler
    */
   patch(path, handler) {
-    this.handlers.set(`PATCH:${path}`, handler);
-    this.paths.add(path);
+    this.routeResolver.addRoute('PATCH', path, handler);
+  }
+
+  /**
+   * Get application statistics
+   * @returns {object} Application statistics
+   */
+  getStats() {
+    return {
+      routes: this.routeResolver.getStats(),
+      cors: this.corsHandler.getConfig(),
+      server: {
+        listening: this.server?.listening || false,
+        address: this.server?.address() || null
+      }
+    };
+  }
+
+  /**
+   * Update CORS configuration
+   * @param {object} corsConfig - New CORS configuration
+   */
+  updateCORSConfig(corsConfig) {
+    this.corsHandler.updateConfig(corsConfig);
+  }
+
+  /**
+   * Get all registered routes
+   * @returns {Array<object>} List of routes
+   */
+  getRoutes() {
+    return this.routeResolver.getRoutes();
+  }
+
+  /**
+   * Clear all registered routes
+   */
+  clearRoutes() {
+    this.routeResolver.clear();
   }
 }
