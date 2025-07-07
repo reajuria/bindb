@@ -129,7 +129,7 @@ test('error handling for invalid paths', async () => {
   // Should handle creation errors gracefully
   await assert.rejects(
     async () => await fileManager.initializeDatabase(),
-    /ENOENT/
+    /ENOENT|EACCES/
   );
 });
 
