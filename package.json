@@ -6,6 +6,9 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test",
+    "test:e2e": "node --test test-e2e/*.test.js",
+    "test:all": "npm run test && npm run test:e2e",
+    "start": "node index.js",
     "benchmark": "node benchmarks/scalability.js",
     "benchmark:quick": "node benchmarks/index.js --quick"
   },

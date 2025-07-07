@@ -210,6 +210,71 @@ export class Table {
     return results;
   }
 
+  /**
+   * Update a record by ID
+   * @param {string} id - Record ID
+   * @param {object} updates - Updated fields
+   * @returns {Promise<object|null>} Updated record or null if not found
+   */
+  async update(id, updates) {
+    const slot = this.idToSlot.get(id);
+    if (slot === undefined) {
+      return null;
+    }
+    
+    // Get current record
+    const current = await this.get(id);
+    if (!current) {
+      return null;
+    }
+    
+    // Merge updates with current data
+    const updated = { ...current, ...updates };
+    
+    // Preserve the original ID (cannot be updated)
+    updated[ID_FIELD] = id;
+    
+    // Create new buffer with updated data
+    const { buffer } = dataRowToBufferWithGenerated(this.bufferSchema, updated);
+    
+    // Clear from read cache to ensure fresh data on next read
+    this.readCache.delete(id);
+    
+    // Update via write buffer
+    await this.writeBuffer.add(slot + 1, buffer, this.getOffset(slot + 1));
+    
+    return updated;
+  }
+
+  /**
+   * Delete a record by ID
+   * @param {string} id - Record ID
+   * @returns {Promise<boolean>} True if deleted, false if not found
+   */
+  async delete(id) {
+    const slot = this.idToSlot.get(id);
+    if (slot === undefined) {
+      return false;
+    }
+    
+    // Create a buffer with deleted row status
+    const buffer = Buffer.alloc(this.bufferSchema.size);
+    buffer.writeUInt8(RowStatus.Deleted, 0);
+    
+    // Update in-memory structures
+    this.idMap[slot] = null;
+    this.idToSlot.delete(id);
+    this.freeSlots.push(slot); // Mark slot as available for reuse
+    
+    // Clear from read cache
+    this.readCache.delete(id);
+    
+    // Write deletion marker to disk
+    await this.writeBuffer.add(slot + 1, buffer, this.getOffset(slot + 1));
+    
+    return true;
+  }
+
   async flush() {
     await this.writeBuffer.flush();
   }
@@ -252,5 +317,23 @@ export class Table {
    */
   getReadCacheStats() {
     return this.readCache.getStats();
+  }
+
+  /**
+   * Get all records (for compatibility)
+   * @returns {Promise<Array<object>>} All active records
+   */
+  async getAll() {
+    const results = [];
+    for (let i = 0; i < this.idMap.length; i++) {
+      const id = this.idMap[i];
+      if (id) {
+        const record = await this.get(id);
+        if (record) {
+          results.push(record);
+        }
+      }
+    }
+    return results;
   }
 }

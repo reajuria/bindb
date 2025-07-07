@@ -125,6 +125,131 @@ test('cache functionality', async () => {
   }
 });
 
+test('update operations', async () => {
+  const { dir, db } = await createTempDB();
+  
+  try {
+    const table = db.table('items');
+    
+    // Insert initial record
+    const inserted = await table.insert({ name: 'original' });
+    await table.flush();
+    
+    // Update the record
+    const updated = await table.update(inserted.id, { name: 'updated' });
+    assert.ok(updated);
+    assert.equal(updated.name, 'updated');
+    assert.equal(updated.id, inserted.id); // ID should remain same
+    
+    // Verify update persisted
+    await table.flush();
+    const retrieved = await table.get(inserted.id);
+    assert.equal(retrieved.name, 'updated');
+    
+    // Test updating non-existent record
+    const notFound = await table.update('nonexistent', { name: 'test' });
+    assert.equal(notFound, null);
+    
+  } finally {
+    await db?.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('delete operations', async () => {
+  const { dir, db } = await createTempDB();
+  
+  try {
+    const table = db.table('items');
+    
+    // Insert record
+    const inserted = await table.insert({ name: 'to_delete' });
+    await table.flush();
+    
+    // Verify record exists
+    let retrieved = await table.get(inserted.id);
+    assert.deepEqual(retrieved, inserted);
+    
+    // Delete the record
+    const deleted = await table.delete(inserted.id);
+    assert.equal(deleted, true);
+    
+    // Verify record is gone
+    retrieved = await table.get(inserted.id);
+    assert.equal(retrieved, null);
+    
+    // Test deleting non-existent record
+    const notFound = await table.delete('nonexistent');
+    assert.equal(notFound, false);
+    
+  } finally {
+    await db?.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('slot reuse after deletion', async () => {
+  const { dir, db } = await createTempDB();
+  
+  try {
+    const table = db.table('items');
+    
+    // Insert records
+    const inserted1 = await table.insert({ name: 'first' });
+    const inserted2 = await table.insert({ name: 'second' });
+    await table.flush();
+    
+    // Delete first record
+    await table.delete(inserted1.id);
+    
+    // Check that slot is marked as free
+    const stats = table.getStats();
+    assert.equal(stats.freeSlots, 1);
+    
+    // Insert new record (should reuse slot)
+    const inserted3 = await table.insert({ name: 'third' });
+    
+    // Verify all operations work correctly
+    assert.equal(await table.get(inserted1.id), null); // Deleted
+    assert.ok(await table.get(inserted2.id)); // Still exists
+    assert.ok(await table.get(inserted3.id)); // New record
+    
+  } finally {
+    await db?.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('getAll excludes deleted records', async () => {
+  const { dir, db } = await createTempDB();
+  
+  try {
+    const table = db.table('items');
+    
+    // Insert multiple records
+    const records = await table.bulkInsert([
+      { name: 'keep1' },
+      { name: 'delete_me' },
+      { name: 'keep2' }
+    ]);
+    await table.flush();
+    
+    // Delete middle record
+    await table.delete(records[1].id);
+    
+    // Get all should only return non-deleted records
+    const allRecords = await table.getAll();
+    assert.equal(allRecords.length, 2);
+    assert.equal(allRecords.find(r => r.name === 'keep1').name, 'keep1');
+    assert.equal(allRecords.find(r => r.name === 'keep2').name, 'keep2');
+    assert.equal(allRecords.find(r => r.name === 'delete_me'), undefined);
+    
+  } finally {
+    await db?.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('large dataset performance characteristics', async () => {
   const { dir, db } = await createTempDB();
   
