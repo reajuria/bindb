@@ -71,8 +71,13 @@ This document tracks the migration of the BinDB codebase from JavaScript to Type
 #### Test Files
 - [x] `column.test.ts` - Type-safe ID generation and utility tests
 - [x] `lru-cache.test.ts` - Generic cache tests with comprehensive type coverage
-- [ ] Remaining test files (8 files pending)
-- [ ] All e2e test files in `test-e2e/` directory
+- [x] `schema.test.ts` - Schema creation and validation with typed interfaces
+- [x] `buffer-utils.test.ts` - **Comprehensive buffer operations** with type safety, edge cases, and Unicode support
+- [ ] Remaining unit test files (6 files pending)
+#### E2E Tests
+- [x] `http-client.ts` - **Complete HTTP client** with typed requests/responses for all API endpoints
+- [x] `simple-api.test.ts` - **Full API testing** with table creation, CRUD operations, bulk operations, error handling, and type validation
+- [ ] Remaining e2e test files (1 file pending)
 
 #### Benchmarks
 - [ ] `benchmarks/index.js`
@@ -129,12 +134,13 @@ This document tracks the migration of the BinDB codebase from JavaScript to Type
 
 ## Status Summary
 - **Total Files**: ~45 JavaScript files identified  
-- **Migrated**: ~32 core files (71% complete) 
+- **Migrated**: ~36 core files (80% complete) 
 - **Build Status**: ✅ Compiling successfully
 - **Runtime Status**: ✅ Server running with full API functionality
 - **Type Coverage**: Comprehensive for all migrated components
-- **Total Files Compiled**: 35+ JavaScript files in dist/
+- **Total Files Compiled**: 40+ JavaScript files in dist/
 - **🎉 Core Engine**: **100% COMPLETE** - All database engine components migrated!
 - **🎉 HTTP API**: **100% COMPLETE** - All HTTP layer components migrated!
 - **🎉 REST API**: **100% COMPLETE** - Full CRUD operations with 14 endpoints!
-- **✅ Test Suite**: TypeScript tests working with type safety
+- **🎉 Test Suite**: **TypeScript tests** with comprehensive type safety and coverage!
+- **🎉 E2E Testing**: **Complete API testing** with typed HTTP client and full validation!

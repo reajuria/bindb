@@ -1,4 +1,7 @@
-import { Types, ColumnDefinition } from './column.js';
+import { Types, type ColumnDefinition } from './column.js';
+
+// Re-export for external use
+export type { ColumnDefinition };
 import { strHash } from './util.js';
 
 export interface SchemaJSON {
