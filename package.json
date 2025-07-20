@@ -3,17 +3,26 @@
   "version": "0.0.1",
   "description": "",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "node --test",
-    "test:e2e": "node --test test-e2e/*.test.js",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "tsc && node dist/index.js",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test",
+    "test:e2e": "npm run build && node --test test-e2e/*.test.js",
     "test:all": "npm run test && npm run test:e2e",
-    "start": "node index.js",
-    "benchmark": "node benchmarks/scalability.js",
-    "benchmark:quick": "node benchmarks/index.js --quick"
+    "benchmark": "npm run build && node benchmarks/scalability.js",
+    "benchmark:quick": "npm run build && node benchmarks/index.js --quick",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
-  "dependencies": {}
+  "devDependencies": {
+    "@types/node": "^24.0.15",
+    "typescript": "^5.8.3"
+  }
 }
