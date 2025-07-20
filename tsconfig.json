@@ -31,8 +31,6 @@
     "node_modules",
     "dist",
     "**/*.test.js",
-    "**/*.test.ts",
-    "test/**/*",
     "test-e2e/**/*",
     "benchmarks/**/*"
   ]
