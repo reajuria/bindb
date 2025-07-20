@@ -1,9 +1,9 @@
 import { Types, type ColumnDefinition } from './column.js';
+import { ID_FIELD } from './constants.js';
 import {
   createSchemaIdGenerator,
   type SchemaIdGenerator,
 } from './id-generator.js';
-import { ID_FIELD } from './constants.js';
 import type { Schema } from './schema.js';
 
 /**

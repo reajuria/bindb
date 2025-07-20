@@ -17,18 +17,6 @@ export enum Types {
 }
 
 /**
- * Column type information interface
- */
-export interface ColumnTypeInfo {
-  name: string;
-  description: string;
-  fixedSize: boolean;
-  defaultLength?: number;
-  nullable: boolean;
-  requiresLength?: boolean;
-}
-
-/**
  * Column definition interface
  */
 export interface ColumnDefinition {
@@ -40,25 +28,17 @@ export interface ColumnDefinition {
 }
 
 /**
- * Validation result interface
- */
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
-/**
  * Validate a column type
  */
-export function isValidColumnType(type: string): type is Types {
+function isValidColumnType(type: string): type is Types {
   return Object.values(Types).includes(type as Types);
 }
 
 /**
  * Get column type information
  */
-export function getColumnTypeInfo(type: Types): ColumnTypeInfo | null {
-  const typeInfo: Record<Types, ColumnTypeInfo> = {
+function getColumnTypeInfo(type: Types): any {
+  const typeInfo: Record<Types, any> = {
     [Types.UniqueIdentifier]: {
       name: 'UniqueIdentifier',
       description: 'Unique identifier with timestamp and hash',
@@ -121,44 +101,6 @@ export function getColumnTypeInfo(type: Types): ColumnTypeInfo | null {
 }
 
 /**
- * Validate column definition
- */
-export function validateColumnDefinition(
-  column: Partial<ColumnDefinition>
-): ValidationResult {
-  const errors: string[] = [];
-
-  if (!column.name || typeof column.name !== 'string') {
-    errors.push('Column name is required and must be a string');
-  }
-
-  if (!column.type || !isValidColumnType(column.type)) {
-    errors.push(`Invalid column type: ${column.type}`);
-  } else {
-    const typeInfo = getColumnTypeInfo(column.type);
-
-    if (typeInfo?.requiresLength && (!column.length || column.length <= 0)) {
-      errors.push(`Column type ${column.type} requires a positive length`);
-    }
-
-    if (
-      typeInfo?.fixedSize &&
-      column.length &&
-      column.length !== typeInfo.defaultLength
-    ) {
-      errors.push(
-        `Column type ${column.type} has fixed size of ${typeInfo.defaultLength}`
-      );
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
-
-/**
  * Create a standard column definition
  */
 export function createColumnDefinition(
@@ -186,12 +128,13 @@ export function createColumnDefinition(
     column.length = typeInfo.defaultLength;
   }
 
-  // Validate the column definition
-  const validation = validateColumnDefinition(column);
-  if (!validation.isValid) {
-    throw new Error(
-      `Invalid column definition: ${validation.errors.join(', ')}`
-    );
+  // Basic validation
+  if (!column.name || typeof column.name !== 'string') {
+    throw new Error('Column name is required and must be a string');
+  }
+
+  if (!column.type || !isValidColumnType(column.type)) {
+    throw new Error(`Invalid column type: ${column.type}`);
   }
 
   return column;

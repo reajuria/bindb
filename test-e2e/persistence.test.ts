@@ -2,9 +2,9 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs/promises';
 import {
   HTTPClient,
+  type FindResponse,
   type HTTPResponse,
   type InsertResponse,
-  type FindResponse,
 } from './http-client.js';
 
 describe('Persistence', () => {

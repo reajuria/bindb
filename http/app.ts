@@ -1,20 +1,20 @@
 import {
   createServer,
-  type Server,
   type IncomingMessage,
+  type Server,
   type ServerResponse,
 } from 'node:http';
-import { RequestParser } from './request-parser.js';
-import { RouteResolver } from './route-resolver.js';
-import { ResponseFormatter } from './response-formatter.js';
 import { CORSHandler } from './cors-handler.js';
+import { RequestParser } from './request-parser.js';
+import { ResponseFormatter } from './response-formatter.js';
+import { RouteResolver } from './route-resolver.js';
 import type {
   AppOptions,
   AppStats,
-  RouteHandler,
-  HttpResponse,
   CORSConfig,
+  HttpResponse,
   Route,
+  RouteHandler,
 } from './types.js';
 
 /**

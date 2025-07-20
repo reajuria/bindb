@@ -1,7 +1,7 @@
 import { readColumn, writeColumn } from '../engine/buffer-utils.js';
-import { Schema, type ColumnDefinition } from '../engine/schema.js';
 import { Types } from '../engine/column.js';
 import { parseBufferSchema, type BufferSchema } from '../engine/row.js';
+import { Schema, type ColumnDefinition } from '../engine/schema.js';
 
 describe('Buffer-utils', () => {
   interface Coordinates {

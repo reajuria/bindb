@@ -1,9 +1,9 @@
 import type {
+  HttpMethod,
+  Route,
   RouteHandler,
   RouteMatch,
-  Route,
   RouteStats,
-  HttpMethod,
 } from './types.js';
 
 /**

@@ -1,5 +1,5 @@
-import fs, { type FileHandle } from 'node:fs/promises';
 import type { Stats } from 'node:fs';
+import fs, { type FileHandle } from 'node:fs/promises';
 
 /**
  * Write operation descriptor

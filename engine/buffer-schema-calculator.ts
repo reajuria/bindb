@@ -1,15 +1,15 @@
+import type { BufferSchema, BufferSchemaColumn } from './buffer-utils.js';
 import { Types, type ColumnDefinition } from './column.js';
-import { ensureIdField } from './id-field-manager.js';
-import type { BufferSchemaColumn, BufferSchema } from './buffer-utils.js';
-import type { Schema } from './schema.js';
 import {
   BYTE_SIZE,
+  COORDINATES_SIZE,
   DOUBLE_SIZE,
   ID_FIELD,
-  COORDINATES_SIZE,
   UINT16_SIZE,
   UNIQUE_IDENTIFIER_SIZE,
 } from './constants.js';
+import { ensureIdField } from './id-field-manager.js';
+import type { Schema } from './schema.js';
 
 /**
  * BufferSchemaCalculator - Calculates buffer schema and sizes for table columns
@@ -114,33 +114,6 @@ export function calculateBufferSchema(schema: Schema): BufferSchema {
     schema: Object.freeze(bufferSchema),
     size: position,
   };
-}
-
-/**
- * Get column size information for a specific column type
- */
-export function getColumnSize(
-  columnType: Types,
-  column: ColumnDefinition,
-  database?: string,
-  table?: string
-): number {
-  const handler = columnSizeHandlers[columnType];
-  if (!handler) {
-    throw new Error(`Unknown column type: ${columnType}`);
-  }
-
-  // Create minimal buffer schema for size calculation
-  const tempBufferSchema: Record<string, BufferSchemaColumn> = {
-    [column.name]: {
-      type: column.type,
-      offset: 0,
-      size: 0,
-      nullFlag: 0,
-    },
-  };
-
-  return handler(column, tempBufferSchema, database, table);
 }
 
 /**

@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import {
   HTTPClient,
+  type FindResponse,
   type HTTPResponse,
   type HealthResponse,
-  type FindResponse,
   type InsertResponse,
 } from './http-client.js';
 

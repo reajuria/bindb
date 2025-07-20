@@ -1,6 +1,6 @@
 import { UNIQUE_IDENTIFIER_SIZE } from './constants.js';
-import { strHash } from './util.js';
 import type { Schema } from './schema.js';
+import { strHash } from './util.js';
 
 /**
  * IdGenerator - Handles unique ID generation with timestamp and counter
@@ -75,18 +75,4 @@ export function uniqueIdDate(id: string): Date {
   const buffer = Buffer.from(id, 'hex');
   const timestampMs = buffer.readUIntBE(4, 6);
   return new Date(timestampMs);
-}
-
-/**
- * Reset the global counter (useful for testing)
- */
-export function resetCounter(value: number = 0): void {
-  counter = value;
-}
-
-/**
- * Get the current counter value (useful for testing)
- */
-export function getCounter(): number {
-  return counter;
 }

@@ -1,23 +1,17 @@
-import { Table } from './table.js';
 import {
   DatabaseFileManager,
   type DatabaseMetadata,
 } from './database-file-manager.js';
 import type { Schema } from './schema.js';
+import { Table } from './table.js';
 
-/**
- * Table reference in database metadata
- */
-export interface TableReference {
+interface TableReference {
   name: string;
   schema: string;
   [key: string]: any;
 }
 
-/**
- * Database metadata with table references
- */
-export interface DatabaseMetadataWithTables extends DatabaseMetadata {
+interface DatabaseMetadataWithTables extends DatabaseMetadata {
   tables: TableReference[];
 }
 

@@ -1,9 +1,9 @@
-import { performance } from 'perf_hooks';
-import { Database } from '../engine/database.js';
-import { Schema } from '../engine/schema.js';
-import { Types } from '../engine/column.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { performance } from 'perf_hooks';
+import { Types } from '../engine/column.js';
+import { Database } from '../engine/database.js';
+import { Schema } from '../engine/schema.js';
 
 describe('Database Performance Benchmarks', () => {
   const testDir = './benchmark-data';

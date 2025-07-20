@@ -1,6 +1,6 @@
+import { Types, createColumnDefinition } from '../engine/column.js';
 import { Database } from '../engine/database.js';
 import { Schema } from '../engine/schema.js';
-import { Types, createColumnDefinition } from '../engine/column.js';
 
 describe('Table', () => {
   it('database and table basic operations', async () => {

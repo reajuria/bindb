@@ -4,53 +4,53 @@
 
 // Re-export specialized components for backward compatibility
 export {
-  calculateBufferSchema as parseBufferSchema,
   DEFAULT_TEXT_LENGTH,
-  validateBufferSchema,
   getBufferSchemaStats,
+  calculateBufferSchema as parseBufferSchema,
+  validateBufferSchema,
   type BufferSchemaStats,
-  type SchemaValidation,
   type ColumnSizeInfo,
+  type SchemaValidation,
 } from './buffer-schema-calculator.js';
 
 export {
-  writeColumn,
   readColumn,
+  writeColumn,
   type BufferSchema,
   type BufferSchemaColumn,
-  type Coordinates,
   type ColumnValue,
+  type Coordinates,
 } from './buffer-utils.js';
 
 export {
-  ensureIdField,
-  findIdColumn,
   addIdField,
   configureExistingIdField,
   createIdColumnDefinition,
-  validateIdField,
-  isIdField,
+  ensureIdField,
+  findIdColumn,
   getIdFieldRequirements,
-  type IdFieldResult,
-  type IdFieldValidation,
-  type IdFieldRequirements,
+  isIdField,
+  validateIdField,
   type IdFieldConfig,
   type IdFieldConfigOptions,
+  type IdFieldRequirements,
+  type IdFieldResult,
+  type IdFieldValidation,
 } from './id-field-manager.js';
 
 export {
-  serializeRow as dataRowToBuffer,
-  serializeRowWithGenerated as dataRowToBufferWithGenerated,
-  deserializeRow as parseDataRow,
   RowStatus,
   createDeletedRowBuffer,
-  isDeletedRow,
-  isActiveRow,
+  serializeRow as dataRowToBuffer,
+  serializeRowWithGenerated as dataRowToBufferWithGenerated,
   getRowStatus,
-  validateSerializedRow,
   getSerializationStats,
+  isActiveRow,
+  isDeletedRow,
+  deserializeRow as parseDataRow,
+  validateSerializedRow,
   type RowData,
-  type SerializationResult,
   type RowValidation,
+  type SerializationResult,
   type SerializationStats,
 } from './row-serializer.js';

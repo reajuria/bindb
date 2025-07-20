@@ -9,10 +9,7 @@ export interface DatabaseMetadata {
   [key: string]: any;
 }
 
-/**
- * Database file paths
- */
-export interface DatabasePaths {
+interface DatabasePaths {
   databaseBasePath: string;
   metadataFilePath: string;
   storageBasePath: string;

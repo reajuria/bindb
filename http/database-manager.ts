@@ -1,17 +1,17 @@
 import { Database } from '../engine/database.js';
-import { Schema } from '../engine/schema.js';
 import type { RowData } from '../engine/row.js';
-import {
-  TypeMapper,
-  type SchemaValidationResult,
-  type ExternalSchema,
-} from './type-mapper.js';
+import { Schema } from '../engine/schema.js';
 import { BatchProcessor, type BatchConfig } from './batch-processor.js';
 import {
   ResultFormatter,
   type FormattingConfig,
   type OperationMetadata,
 } from './result-formatter.js';
+import {
+  TypeMapper,
+  type ExternalSchema,
+  type SchemaValidationResult,
+} from './type-mapper.js';
 
 /**
  * Database manager configuration options

@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { Types } from '../engine/column.js';
 import { Database } from '../engine/database.js';
 import { Schema, type ColumnDefinition } from '../engine/schema.js';
-import { Types } from '../engine/column.js';
 
 describe('Database', () => {
   async function createTempDir(): Promise<string> {
