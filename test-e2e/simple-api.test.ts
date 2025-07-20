@@ -122,11 +122,16 @@ test('CRUD operations flow', async () => {
     data: insertData
   });
   
-  assert.equal(insertResponse.status, 200);
-  assert.ok(insertResponse.data.insertedId);
+    assert.equal(insertResponse.status, 200);
+  
+  // Check if insert was successful and has expected data
+  if (!insertResponse.data.insertedId) {
+    console.log('Insert response:', JSON.stringify(insertResponse.data, null, 2));
+  }
+  assert.ok(insertResponse.data.insertedId, 'Insert response should have insertedId');
   assert.equal(insertResponse.data.record.name, 'John Doe');
   assert.equal(insertResponse.data.record.age, 25);
-  
+
   const recordId: string = insertResponse.data.insertedId;
   
   // Get record

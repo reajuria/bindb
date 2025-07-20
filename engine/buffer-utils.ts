@@ -62,16 +62,30 @@ const writeHandlers: Record<Types, WriteHandler> = {
   [Types.UniqueIdentifier]: (buffer, column, value: string) => {
     buffer.write(value, column.offset, UNIQUE_IDENTIFIER_SIZE, 'hex');
   },
-  [Types.Text]: (buffer, column, value: string) => {
-    const length = value.length;
-    buffer.writeUInt16BE(length, column.offset);
-    if (length > 0) {
-      buffer.write(
-        value,
-        column.offset + UINT16_SIZE,
-        column.size - UINT16_SIZE,
-        'utf8'
-      );
+  [Types.Text]: (buffer, column, value: string | null | undefined) => {
+    const text = value || '';
+    const byteLength = Buffer.byteLength(text, 'utf8');
+    const maxBytes = column.size - UINT16_SIZE;
+    
+    if (byteLength <= maxBytes) {
+      buffer.writeUInt16BE(byteLength, column.offset);
+      if (byteLength > 0) {
+        buffer.write(text, column.offset + UINT16_SIZE, maxBytes, 'utf8');
+      }
+    } else {
+      // Truncate to fit, ensuring we don't break UTF-8 characters
+      let truncated = text;
+      let currentByteLength = byteLength;
+      
+      while (currentByteLength > maxBytes && truncated.length > 0) {
+        truncated = truncated.slice(0, -1);
+        currentByteLength = Buffer.byteLength(truncated, 'utf8');
+      }
+      
+      buffer.writeUInt16BE(currentByteLength, column.offset);
+      if (currentByteLength > 0) {
+        buffer.write(truncated, column.offset + UINT16_SIZE, maxBytes, 'utf8');
+      }
     }
   },
   [Types.Number]: (buffer, column, value: number) => {
@@ -105,12 +119,13 @@ const readHandlers: Record<Types, ReadHandler> = {
       .toString('hex');
   },
   [Types.Text]: (buffer, column): string => {
-    const length = buffer.readUInt16BE(column.offset);
-    const text = buffer.slice(
+    const byteLength = buffer.readUInt16BE(column.offset);
+    if (byteLength === 0) return '';
+    const textBuffer = buffer.slice(
       column.offset + UINT16_SIZE,
-      column.offset + UINT16_SIZE + length
+      column.offset + UINT16_SIZE + byteLength
     );
-    return text.toString('utf8');
+    return textBuffer.toString('utf8');
   },
   [Types.Number]: (buffer, column): number => {
     return buffer.readDoubleBE(column.offset);
