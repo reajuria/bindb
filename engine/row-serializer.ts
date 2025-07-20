@@ -1,4 +1,9 @@
-import { readColumn, writeColumn, type BufferSchema, type ColumnValue } from './buffer-utils.js';
+import {
+  readColumn,
+  writeColumn,
+  type BufferSchema,
+  type ColumnValue,
+} from './buffer-utils.js';
 
 /**
  * RowSerializer - Handles row serialization and deserialization to/from binary format
@@ -50,16 +55,16 @@ export interface SerializationStats {
  * Convert a row object to a binary buffer
  */
 export function serializeRow(
-  bufferSchema: BufferSchema, 
-  row: RowData, 
+  bufferSchema: BufferSchema,
+  row: RowData,
   rowFlag: RowStatus = RowStatus.Active
 ): Buffer {
   const { schema, size } = bufferSchema;
   const buffer = Buffer.alloc(size);
-  
+
   // Write row status flag at position 0
   buffer.writeUInt8(rowFlag, 0);
-  
+
   // Write each column
   for (const key in schema) {
     writeColumn(buffer, schema, key, row[key]);
@@ -73,28 +78,32 @@ export function serializeRow(
  * More efficient for inserts - avoids full parsing round trip
  */
 export function serializeRowWithGenerated(
-  bufferSchema: BufferSchema, 
-  row: RowData, 
+  bufferSchema: BufferSchema,
+  row: RowData,
   rowFlag: RowStatus = RowStatus.Active
 ): SerializationResult {
   const { schema, size } = bufferSchema;
   const buffer = Buffer.alloc(size);
   const generatedValues: Record<string, ColumnValue> = {};
-  
+
   // Write row status flag at position 0
   buffer.writeUInt8(rowFlag, 0);
-  
+
   // Write each column and capture generated values
   for (const key in schema) {
     const column = schema[key];
     let value = row[key];
-    
+
     // Handle default value generation (IDs, timestamps, etc.)
-    if (value === undefined && column.default && typeof column.default === 'function') {
+    if (
+      value === undefined &&
+      column.default &&
+      typeof column.default === 'function'
+    ) {
       value = column.default();
       generatedValues[key] = value;
     }
-    
+
     writeColumn(buffer, schema, key, value);
   }
 
@@ -104,7 +113,10 @@ export function serializeRowWithGenerated(
 /**
  * Parse a row object from a binary buffer
  */
-export function deserializeRow(bufferSchema: BufferSchema, buffer: Buffer): RowData | null {
+export function deserializeRow(
+  bufferSchema: BufferSchema,
+  buffer: Buffer
+): RowData | null {
   const { schema } = bufferSchema;
 
   // Validate buffer size
@@ -116,12 +128,12 @@ export function deserializeRow(bufferSchema: BufferSchema, buffer: Buffer): RowD
 
   // Read and validate row status flag
   const rowFlag = buffer.readUInt8(0);
-  
+
   // Fast path: check for deleted first (most common check)
   if (rowFlag === RowStatus.Deleted) {
     return null;
   }
-  
+
   // Validate row flag (error case is rare)
   if (rowFlag !== RowStatus.Active) {
     throw new Error(`Invalid row flag: ${rowFlag}`);
@@ -132,7 +144,7 @@ export function deserializeRow(bufferSchema: BufferSchema, buffer: Buffer): RowD
   for (const key in schema) {
     row[key] = readColumn(buffer, bufferSchema, key);
   }
-  
+
   return row;
 }
 
@@ -178,42 +190,50 @@ export function getRowStatus(buffer: Buffer): RowStatus {
 /**
  * Validate serialized row buffer
  */
-export function validateSerializedRow(buffer: Buffer, bufferSchema: BufferSchema): RowValidation {
+export function validateSerializedRow(
+  buffer: Buffer,
+  bufferSchema: BufferSchema
+): RowValidation {
   const errors: string[] = [];
-  
+
   if (!Buffer.isBuffer(buffer)) {
     errors.push('Input must be a Buffer');
     return { isValid: false, errors };
   }
-  
+
   if (buffer.length !== bufferSchema.size) {
-    errors.push(`Buffer size mismatch. Expected ${bufferSchema.size}, got ${buffer.length}`);
+    errors.push(
+      `Buffer size mismatch. Expected ${bufferSchema.size}, got ${buffer.length}`
+    );
   }
-  
+
   if (buffer.length > 0) {
     const rowFlag = buffer.readUInt8(0);
     if (rowFlag !== RowStatus.Active && rowFlag !== RowStatus.Deleted) {
       errors.push(`Invalid row status flag: ${rowFlag}`);
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 /**
  * Get serialization statistics for performance monitoring
  */
-export function getSerializationStats(bufferSchema: BufferSchema): SerializationStats {
+export function getSerializationStats(
+  bufferSchema: BufferSchema
+): SerializationStats {
   const columnCount = Object.keys(bufferSchema.schema).length;
-  
+
   return {
     bufferSize: bufferSchema.size,
     columnCount,
     statusFlagSize: 1,
     dataSize: bufferSchema.size - 1,
-    averageColumnSize: columnCount > 0 ? (bufferSchema.size - 1) / columnCount : 0
+    averageColumnSize:
+      columnCount > 0 ? (bufferSchema.size - 1) / columnCount : 0,
   };
 }

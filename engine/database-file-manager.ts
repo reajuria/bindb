@@ -32,7 +32,10 @@ export class DatabaseFileManager {
     this.storageBasePath = storageBasePath;
     this.databaseName = databaseName;
     this.databaseBasePath = path.join(storageBasePath, databaseName);
-    this.metadataFilePath = path.join(this.databaseBasePath, 'db_metadata.json');
+    this.metadataFilePath = path.join(
+      this.databaseBasePath,
+      'db_metadata.json'
+    );
   }
 
   /**
@@ -92,7 +95,9 @@ export class DatabaseFileManager {
   /**
    * Create metadata file with initial content
    */
-  async createMetadataFile(initialMetadata: DatabaseMetadata = { tables: [] }): Promise<void> {
+  async createMetadataFile(
+    initialMetadata: DatabaseMetadata = { tables: [] }
+  ): Promise<void> {
     await fs.writeFile(this.metadataFilePath, JSON.stringify(initialMetadata));
   }
 
@@ -108,13 +113,18 @@ export class DatabaseFileManager {
    * Write metadata to file
    */
   async writeMetadata(metadata: DatabaseMetadata): Promise<void> {
-    await fs.writeFile(this.metadataFilePath, JSON.stringify(metadata, null, 2));
+    await fs.writeFile(
+      this.metadataFilePath,
+      JSON.stringify(metadata, null, 2)
+    );
   }
 
   /**
    * Initialize database files and directory structure
    */
-  async initializeDatabase(initialMetadata: DatabaseMetadata = { tables: [] }): Promise<void> {
+  async initializeDatabase(
+    initialMetadata: DatabaseMetadata = { tables: [] }
+  ): Promise<void> {
     // Ensure database directory exists
     await this.initializeDatabaseDirectory();
 
@@ -131,7 +141,7 @@ export class DatabaseFileManager {
     return {
       databaseBasePath: this.databaseBasePath,
       metadataFilePath: this.metadataFilePath,
-      storageBasePath: this.storageBasePath
+      storageBasePath: this.storageBasePath,
     };
   }
 
@@ -172,18 +182,20 @@ export class DatabaseFileManager {
   /**
    * Check if table files exist
    */
-  async tableFilesExist(tableName: string): Promise<{ schema: boolean; data: boolean }> {
+  async tableFilesExist(
+    tableName: string
+  ): Promise<{ schema: boolean; data: boolean }> {
     const schemaPath = this.getTableSchemaPath(tableName);
     const dataPath = this.getTableDataPath(tableName);
 
     const [schemaExists, dataExists] = await Promise.all([
       DatabaseFileManager.fileExists(schemaPath),
-      DatabaseFileManager.fileExists(dataPath)
+      DatabaseFileManager.fileExists(dataPath),
     ]);
 
     return {
       schema: schemaExists,
-      data: dataExists
+      data: dataExists,
     };
   }
 

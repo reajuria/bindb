@@ -1,5 +1,9 @@
 import { LRUCache, type CacheStats } from './lru-cache.js';
-import { WriteBuffer, type BufferStats, type FlushCallback } from './write-buffer.js';
+import {
+  WriteBuffer,
+  type BufferStats,
+  type FlushCallback,
+} from './write-buffer.js';
 
 /**
  * Table cache manager configuration options
@@ -38,17 +42,17 @@ export class TableCacheManager {
     const {
       readCacheSize = 1000,
       maxBufferSize = 50 * 1024 * 1024, // 50MB
-      maxBufferRecords = 10000,          // 10k records
-      writeFlushCallback = null
+      maxBufferRecords = 10000, // 10k records
+      writeFlushCallback = null,
     } = options;
 
     // Initialize read cache
     this.readCache = new LRUCache<string, any>(readCacheSize);
-    
+
     // Initialize write buffer
     this.writeBuffer = new WriteBuffer({
       maxBufferSize,
-      maxBufferRecords
+      maxBufferRecords,
     });
 
     // Set up write buffer flush callback if provided
@@ -102,7 +106,11 @@ export class TableCacheManager {
   /**
    * Add item to write buffer
    */
-  async addToWriteBuffer(slot: number, buffer: Buffer, position: number): Promise<boolean> {
+  async addToWriteBuffer(
+    slot: number,
+    buffer: Buffer,
+    position: number
+  ): Promise<boolean> {
     return await this.writeBuffer.add(slot, buffer, position);
   }
 
@@ -162,7 +170,7 @@ export class TableCacheManager {
   getStats(): TableCacheStats {
     return {
       readCache: this.getReadCacheStats(),
-      writeBuffer: this.getWriteBufferStats()
+      writeBuffer: this.getWriteBufferStats(),
     };
   }
 
@@ -175,7 +183,7 @@ export class TableCacheManager {
     if (readCacheHit !== undefined) {
       return {
         source: 'readCache',
-        data: readCacheHit
+        data: readCacheHit,
       };
     }
 
@@ -184,7 +192,7 @@ export class TableCacheManager {
     if (writeBufferHit) {
       return {
         source: 'writeBuffer',
-        data: writeBufferHit
+        data: writeBufferHit,
       };
     }
 
@@ -196,7 +204,7 @@ export class TableCacheManager {
    */
   invalidateRecord(id: string): void {
     this.removeFromReadCache(id);
-    // Note: Write buffer items are invalidated by position/slot, 
+    // Note: Write buffer items are invalidated by position/slot,
     // which is handled at a higher level
   }
 

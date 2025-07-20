@@ -3,7 +3,14 @@
 /**
  * HTTP Method types
  */
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
+export type HttpMethod =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'DELETE'
+  | 'PATCH'
+  | 'OPTIONS'
+  | 'HEAD';
 
 /**
  * Route parameters extracted from URL path
@@ -86,7 +93,7 @@ export interface RouteStats {
 }
 
 /**
- * Server statistics  
+ * Server statistics
  */
 export interface ServerStats {
   listening: boolean;

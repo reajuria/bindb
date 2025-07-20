@@ -63,34 +63,34 @@ export class TypeMapper {
   constructor() {
     // Default type mapping from common API types to BinDB types
     this.typeMap = {
-      'string': Types.Text,
-      'text': Types.Text,
-      'varchar': Types.Text,
-      'char': Types.Text,
-      'number': Types.Number,
-      'double': Types.Number,
-      'float': Types.Number,
-      'int': Types.Number,
-      'integer': Types.Number,
-      'decimal': Types.Number,
-      'boolean': Types.Boolean,
-      'bool': Types.Boolean,
-      'date': Types.Date,
-      'datetime': Types.Date,
-      'timestamp': Types.Date,
-      'time': Types.Date,
-      'coordinates': Types.Coordinates,
-      'location': Types.Coordinates,
-      'gps': Types.Coordinates,
-      'point': Types.Coordinates,
-      'buffer': Types.Buffer,
-      'binary': Types.Buffer,
-      'blob': Types.Buffer,
-      'unique_identifier': Types.UniqueIdentifier,
-      'uuid': Types.UniqueIdentifier,
-      'id': Types.UniqueIdentifier,
-      'updated_at': Types.UpdatedAt,
-      'modified_at': Types.UpdatedAt
+      string: Types.Text,
+      text: Types.Text,
+      varchar: Types.Text,
+      char: Types.Text,
+      number: Types.Number,
+      double: Types.Number,
+      float: Types.Number,
+      int: Types.Number,
+      integer: Types.Number,
+      decimal: Types.Number,
+      boolean: Types.Boolean,
+      bool: Types.Boolean,
+      date: Types.Date,
+      datetime: Types.Date,
+      timestamp: Types.Date,
+      time: Types.Date,
+      coordinates: Types.Coordinates,
+      location: Types.Coordinates,
+      gps: Types.Coordinates,
+      point: Types.Coordinates,
+      buffer: Types.Buffer,
+      binary: Types.Buffer,
+      blob: Types.Buffer,
+      unique_identifier: Types.UniqueIdentifier,
+      uuid: Types.UniqueIdentifier,
+      id: Types.UniqueIdentifier,
+      updated_at: Types.UpdatedAt,
+      modified_at: Types.UpdatedAt,
     };
   }
 
@@ -118,7 +118,7 @@ export class TypeMapper {
       [Types.Coordinates]: 'coordinates',
       [Types.Buffer]: 'buffer',
       [Types.UniqueIdentifier]: 'id',
-      [Types.UpdatedAt]: 'updated_at'
+      [Types.UpdatedAt]: 'updated_at',
     };
 
     return reverseMap[bindbType] || 'text';
@@ -153,7 +153,7 @@ export class TypeMapper {
       length: field.length,
       default: field.default,
       nullable: field.nullable !== false, // Default to nullable
-      description: field.description
+      description: field.description,
     } as BinDBSchemaField;
   }
 
@@ -187,7 +187,9 @@ export class TypeMapper {
    */
   isTypeSupported(externalType: string): boolean {
     const normalizedType = externalType?.toLowerCase()?.trim();
-    return normalizedType ? this.typeMap.hasOwnProperty(normalizedType) : false;
+    return normalizedType
+      ? Object.prototype.hasOwnProperty.call(this.typeMap, normalizedType)
+      : false;
   }
 
   /**
@@ -201,7 +203,7 @@ export class TypeMapper {
       externalType,
       bindbType,
       isSupported,
-      isDefaultMapping: !isSupported && bindbType === Types.Text
+      isDefaultMapping: !isSupported && bindbType === Types.Text,
     };
   }
 
@@ -242,10 +244,15 @@ export class TypeMapper {
       fieldNames.add(field.name);
 
       if (!this.isTypeSupported(field.type)) {
-        warnings.push(`Unknown type '${field.type}' for field '${field.name}', will default to 'text'`);
+        warnings.push(
+          `Unknown type '${field.type}' for field '${field.name}', will default to 'text'`
+        );
       }
 
-      if (field.length !== undefined && (typeof field.length !== 'number' || field.length <= 0)) {
+      if (
+        field.length !== undefined &&
+        (typeof field.length !== 'number' || field.length <= 0)
+      ) {
         errors.push(`Field '${field.name}' length must be a positive number`);
       }
     }
@@ -253,7 +260,7 @@ export class TypeMapper {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -274,7 +281,10 @@ export class TypeMapper {
   /**
    * Validate individual field
    */
-  validateField(field: ExternalSchemaField): { isValid: boolean; errors: string[] } {
+  validateField(field: ExternalSchemaField): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!field || typeof field !== 'object') {
@@ -286,13 +296,16 @@ export class TypeMapper {
       errors.push('Field must have a string name');
     }
 
-    if (field.length !== undefined && (typeof field.length !== 'number' || field.length <= 0)) {
+    if (
+      field.length !== undefined &&
+      (typeof field.length !== 'number' || field.length <= 0)
+    ) {
       errors.push('Field length must be a positive number');
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -301,34 +314,34 @@ export class TypeMapper {
    */
   resetToDefaults(): void {
     this.typeMap = {
-      'string': Types.Text,
-      'text': Types.Text,
-      'varchar': Types.Text,
-      'char': Types.Text,
-      'number': Types.Number,
-      'double': Types.Number,
-      'float': Types.Number,
-      'int': Types.Number,
-      'integer': Types.Number,
-      'decimal': Types.Number,
-      'boolean': Types.Boolean,
-      'bool': Types.Boolean,
-      'date': Types.Date,
-      'datetime': Types.Date,
-      'timestamp': Types.Date,
-      'time': Types.Date,
-      'coordinates': Types.Coordinates,
-      'location': Types.Coordinates,
-      'gps': Types.Coordinates,
-      'point': Types.Coordinates,
-      'buffer': Types.Buffer,
-      'binary': Types.Buffer,
-      'blob': Types.Buffer,
-      'unique_identifier': Types.UniqueIdentifier,
-      'uuid': Types.UniqueIdentifier,
-      'id': Types.UniqueIdentifier,
-      'updated_at': Types.UpdatedAt,
-      'modified_at': Types.UpdatedAt
+      string: Types.Text,
+      text: Types.Text,
+      varchar: Types.Text,
+      char: Types.Text,
+      number: Types.Number,
+      double: Types.Number,
+      float: Types.Number,
+      int: Types.Number,
+      integer: Types.Number,
+      decimal: Types.Number,
+      boolean: Types.Boolean,
+      bool: Types.Boolean,
+      date: Types.Date,
+      datetime: Types.Date,
+      timestamp: Types.Date,
+      time: Types.Date,
+      coordinates: Types.Coordinates,
+      location: Types.Coordinates,
+      gps: Types.Coordinates,
+      point: Types.Coordinates,
+      buffer: Types.Buffer,
+      binary: Types.Buffer,
+      blob: Types.Buffer,
+      unique_identifier: Types.UniqueIdentifier,
+      uuid: Types.UniqueIdentifier,
+      id: Types.UniqueIdentifier,
+      updated_at: Types.UpdatedAt,
+      modified_at: Types.UpdatedAt,
     };
   }
 
@@ -348,7 +361,10 @@ export class TypeMapper {
       totalMappings: Object.keys(this.typeMap).length,
       externalTypes: Object.keys(this.typeMap).length,
       bindbTypes: bindbTypes.size,
-      customMappings: Math.max(0, Object.keys(this.typeMap).length - defaultMappingsCount)
+      customMappings: Math.max(
+        0,
+        Object.keys(this.typeMap).length - defaultMappingsCount
+      ),
     };
   }
 }

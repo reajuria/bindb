@@ -1,5 +1,8 @@
 import { Types, type ColumnDefinition } from './column.js';
-import { createSchemaIdGenerator, type SchemaIdGenerator } from './id-generator.js';
+import {
+  createSchemaIdGenerator,
+  type SchemaIdGenerator,
+} from './id-generator.js';
 import { ID_FIELD } from './constants.js';
 import type { Schema } from './schema.js';
 
@@ -63,9 +66,12 @@ export interface IdFieldConfig {
 /**
  * Ensure a schema has a properly configured ID field
  */
-export function ensureIdField(columns: ColumnDefinition[], schema: Schema): IdFieldResult {
+export function ensureIdField(
+  columns: ColumnDefinition[],
+  schema: Schema
+): IdFieldResult {
   const existingIdColumn = findIdColumn(columns);
-  
+
   if (!existingIdColumn) {
     return addIdField(columns, schema);
   } else {
@@ -76,38 +82,46 @@ export function ensureIdField(columns: ColumnDefinition[], schema: Schema): IdFi
 /**
  * Find the ID column in a columns array
  */
-export function findIdColumn(columns: ColumnDefinition[]): ColumnDefinition | null {
+export function findIdColumn(
+  columns: ColumnDefinition[]
+): ColumnDefinition | null {
   return columns.find(column => column.name === ID_FIELD) || null;
 }
 
 /**
  * Add a new ID field to the beginning of columns array
  */
-export function addIdField(columns: ColumnDefinition[], schema: Schema): IdFieldResult {
+export function addIdField(
+  columns: ColumnDefinition[],
+  schema: Schema
+): IdFieldResult {
   const idColumn = createIdColumnDefinition(schema);
   columns.unshift(idColumn);
-  
+
   return {
     action: 'added',
     column: idColumn,
-    position: 0
+    position: 0,
   };
 }
 
 /**
  * Configure an existing ID field with proper default generator
  */
-export function configureExistingIdField(idColumn: ColumnDefinition, schema: Schema): IdFieldResult {
+export function configureExistingIdField(
+  idColumn: ColumnDefinition,
+  schema: Schema
+): IdFieldResult {
   const hadDefault = !!idColumn.default;
-  
+
   if (!idColumn.default) {
     idColumn.default = createSchemaIdGenerator(schema);
   }
-  
+
   return {
     action: hadDefault ? 'already_configured' : 'configured',
     column: idColumn,
-    hadPreviousDefault: hadDefault
+    hadPreviousDefault: hadDefault,
   };
 }
 
@@ -120,36 +134,38 @@ export function createIdColumnDefinition(schema: Schema): ColumnDefinition {
     type: Types.UniqueIdentifier,
     default: createSchemaIdGenerator(schema),
     nullable: false,
-    description: 'Auto-generated unique identifier'
+    description: 'Auto-generated unique identifier',
   };
 }
 
 /**
  * Validate ID field configuration
  */
-export function validateIdField(idColumn: ColumnDefinition | null): IdFieldValidation {
+export function validateIdField(
+  idColumn: ColumnDefinition | null
+): IdFieldValidation {
   const errors: string[] = [];
-  
+
   if (!idColumn) {
     errors.push('ID column is required');
     return { isValid: false, errors };
   }
-  
+
   if (idColumn.name !== ID_FIELD) {
     errors.push(`ID column must be named '${ID_FIELD}'`);
   }
-  
+
   if (idColumn.type !== Types.UniqueIdentifier) {
     errors.push(`ID column must be of type '${Types.UniqueIdentifier}'`);
   }
-  
+
   if (!idColumn.default || typeof idColumn.default !== 'function') {
     errors.push('ID column must have a default value generator function');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -173,26 +189,28 @@ export function getIdFieldRequirements(): IdFieldRequirements {
     description: 'Unique identifier automatically generated for each record',
     position: 'first',
     size: 12, // bytes
-    format: 'hex string'
+    format: 'hex string',
   };
 }
 
 /**
  * Create ID field configuration options
  */
-export function createIdFieldConfig(options: IdFieldConfigOptions = {}): IdFieldConfig {
+export function createIdFieldConfig(
+  options: IdFieldConfigOptions = {}
+): IdFieldConfig {
   const {
     customGenerator = null,
     nullable = false,
-    description = 'Auto-generated unique identifier'
+    description = 'Auto-generated unique identifier',
   } = options;
-  
+
   return {
     name: ID_FIELD,
     type: Types.UniqueIdentifier,
     nullable,
     description,
-    customGenerator
+    customGenerator,
   };
 }
 
@@ -200,23 +218,23 @@ export function createIdFieldConfig(options: IdFieldConfigOptions = {}): IdField
  * Apply ID field configuration to a schema
  */
 export function applyIdFieldConfig(
-  columns: ColumnDefinition[], 
-  schema: Schema, 
+  columns: ColumnDefinition[],
+  schema: Schema,
   config: IdFieldConfig
 ): IdFieldResult {
   const existingId = findIdColumn(columns);
-  
+
   if (existingId) {
     // Update existing ID field
     Object.assign(existingId, {
       nullable: config.nullable,
       description: config.description,
-      default: config.customGenerator || createSchemaIdGenerator(schema)
+      default: config.customGenerator || createSchemaIdGenerator(schema),
     });
-    
+
     return {
       action: 'updated',
-      column: existingId
+      column: existingId,
     };
   } else {
     // Add new ID field
@@ -224,14 +242,14 @@ export function applyIdFieldConfig(
       ...createIdColumnDefinition(schema),
       nullable: config.nullable,
       description: config.description,
-      default: config.customGenerator || createSchemaIdGenerator(schema)
+      default: config.customGenerator || createSchemaIdGenerator(schema),
     };
-    
+
     columns.unshift(idColumn);
-    
+
     return {
       action: 'added',
-      column: idColumn
+      column: idColumn,
     };
   }
 }

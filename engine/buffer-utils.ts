@@ -37,20 +37,24 @@ export interface Coordinates {
 /**
  * Column value types
  */
-export type ColumnValue = 
-  | string 
-  | number 
-  | boolean 
-  | Date 
-  | Buffer 
-  | Coordinates 
-  | null 
+export type ColumnValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | Buffer
+  | Coordinates
+  | null
   | undefined;
 
 /**
  * Write handler function type
  */
-type WriteHandler = (buffer: Buffer, column: BufferSchemaColumn, value: any) => void;
+type WriteHandler = (
+  buffer: Buffer,
+  column: BufferSchemaColumn,
+  value: any
+) => void;
 
 /**
  * Read handler function type
@@ -66,7 +70,7 @@ const writeHandlers: Record<Types, WriteHandler> = {
     const text = value || '';
     const byteLength = Buffer.byteLength(text, 'utf8');
     const maxBytes = column.size - UINT16_SIZE;
-    
+
     if (byteLength <= maxBytes) {
       buffer.writeUInt16BE(byteLength, column.offset);
       if (byteLength > 0) {
@@ -76,12 +80,12 @@ const writeHandlers: Record<Types, WriteHandler> = {
       // Truncate to fit, ensuring we don't break UTF-8 characters
       let truncated = text;
       let currentByteLength = byteLength;
-      
+
       while (currentByteLength > maxBytes && truncated.length > 0) {
         truncated = truncated.slice(0, -1);
         currentByteLength = Buffer.byteLength(truncated, 'utf8');
       }
-      
+
       buffer.writeUInt16BE(currentByteLength, column.offset);
       if (currentByteLength > 0) {
         buffer.write(truncated, column.offset + UINT16_SIZE, maxBytes, 'utf8');
@@ -157,9 +161,9 @@ const readHandlers: Record<Types, ReadHandler> = {
  * Write a value to a buffer
  */
 export function writeColumn(
-  buffer: Buffer, 
-  bufferSchema: Record<string, BufferSchemaColumn>, 
-  key: string, 
+  buffer: Buffer,
+  bufferSchema: Record<string, BufferSchemaColumn>,
+  key: string,
   value: ColumnValue
 ): void {
   // Get the column schema
@@ -197,8 +201,8 @@ export function writeColumn(
  * Read a value from a buffer
  */
 export function readColumn(
-  buffer: Buffer, 
-  bufferSchema: BufferSchema, 
+  buffer: Buffer,
+  bufferSchema: BufferSchema,
   key: string
 ): ColumnValue {
   const { schema } = bufferSchema;

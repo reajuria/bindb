@@ -70,7 +70,7 @@ export function formatDuration(milliseconds: number): string {
  */
 export function createTimer(): Timer {
   const startTime = process.hrtime.bigint();
-  
+
   return {
     /**
      * Get elapsed time in milliseconds
@@ -79,7 +79,7 @@ export function createTimer(): Timer {
       const endTime = process.hrtime.bigint();
       return nanosecondsToMilliseconds(endTime - startTime);
     },
-    
+
     /**
      * Get elapsed time in nanoseconds
      */
@@ -87,12 +87,12 @@ export function createTimer(): Timer {
       const endTime = process.hrtime.bigint();
       return endTime - startTime;
     },
-    
+
     /**
      * Get formatted elapsed time
      */
     elapsedFormatted(): string {
       return formatDuration(this.elapsed());
-    }
+    },
   };
 }

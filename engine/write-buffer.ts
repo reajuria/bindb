@@ -44,7 +44,7 @@ export interface BufferStats {
 /**
  * Flush callback function type
  */
-export type FlushCallback = (writes: WriteOperation[]) => Promise<void>;
+export type FlushCallback = (_writes: WriteOperation[]) => Promise<void>;
 
 export class WriteBuffer {
   private maxBufferSize: number;
@@ -72,13 +72,13 @@ export class WriteBuffer {
   async add(slot: number, buffer: Buffer, position: number): Promise<boolean> {
     this.buffer.set(slot, { buffer, position });
     this.bufferSize += buffer.length;
-    
+
     // Check if we need to auto-flush
     if (this.shouldFlush()) {
       await this.flush();
       return true;
     }
-    
+
     return false;
   }
 
@@ -100,33 +100,35 @@ export class WriteBuffer {
    * Check if buffer should be flushed
    */
   shouldFlush(): boolean {
-    return this.buffer.size >= this.maxBufferRecords || 
-           this.bufferSize >= this.maxBufferSize;
+    return (
+      this.buffer.size >= this.maxBufferRecords ||
+      this.bufferSize >= this.maxBufferSize
+    );
   }
 
   /**
-   * Flush all buffered writes
+   * Flush all buffered _writes
    */
   async flush(): Promise<void> {
     if (this.flushInProgress || this.buffer.size === 0) {
       return;
     }
-    
+
     this.flushInProgress = true;
-    
+
     try {
-      // Prepare writes for the callback
-      const writes: WriteOperation[] = Array.from(this.buffer.entries())
-        .map(([slot, data]) => ({ slot, ...data }));
-      
+      // Prepare _writes for the callback
+      const _writes: WriteOperation[] = Array.from(this.buffer.entries()).map(
+        ([slot, data]) => ({ slot, ...data })
+      );
+
       // Call the flush callback if provided
       if (this.flushCallback) {
-        await this.flushCallback(writes);
+        await this.flushCallback(_writes);
       }
-      
+
       // Clear buffer
       this.clear();
-      
     } finally {
       this.flushInProgress = false;
     }
@@ -149,9 +151,11 @@ export class WriteBuffer {
       bufferSize: this.bufferSize,
       maxRecords: this.maxBufferRecords,
       maxSize: this.maxBufferSize,
-      recordUtilization: (this.buffer.size / this.maxBufferRecords * 100).toFixed(1) + '%',
-      sizeUtilization: (this.bufferSize / this.maxBufferSize * 100).toFixed(1) + '%',
-      flushInProgress: this.flushInProgress
+      recordUtilization:
+        ((this.buffer.size / this.maxBufferRecords) * 100).toFixed(1) + '%',
+      sizeUtilization:
+        ((this.bufferSize / this.maxBufferSize) * 100).toFixed(1) + '%',
+      flushInProgress: this.flushInProgress,
     };
   }
 

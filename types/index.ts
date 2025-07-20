@@ -13,7 +13,8 @@ export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 /**
  * Make specified properties optional
  */
-export type OptionalFields<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type OptionalFields<T, K extends keyof T> = Omit<T, K> &
+  Partial<Pick<T, K>>;
 
 /**
  * Deep readonly type
@@ -22,8 +23,8 @@ export type DeepReadonly<T> = {
   readonly [P in keyof T]: T[P] extends (infer U)[]
     ? ReadonlyArray<DeepReadonly<U>>
     : T[P] extends object
-    ? DeepReadonly<T[P]>
-    : T[P];
+      ? DeepReadonly<T[P]>
+      : T[P];
 };
 
 /**
@@ -41,7 +42,7 @@ export type ArrayElement<T> = T extends readonly (infer U)[] ? U : never;
 /**
  * Result type for operations that can fail
  */
-export type Result<T, E = Error> = 
+export type Result<T, E = Error> =
   | { success: true; data: T; error?: never }
   | { success: false; data?: never; error: E };
 
@@ -69,7 +70,7 @@ export enum DataType {
   Boolean = 'boolean',
   Date = 'date',
   Coordinates = 'coordinates',
-  Buffer = 'buffer'
+  Buffer = 'buffer',
 }
 
 /**
@@ -83,13 +84,13 @@ export interface Coordinates {
 /**
  * Supported value types in the database
  */
-export type DatabaseValue = 
-  | string 
-  | number 
-  | boolean 
-  | Date 
-  | Coordinates 
-  | Buffer 
+export type DatabaseValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | Coordinates
+  | Buffer
   | null;
 
 /**
@@ -137,7 +138,7 @@ export enum OperationType {
   Delete = 'delete',
   BulkInsert = 'bulk_insert',
   BulkUpdate = 'bulk_update',
-  BulkDelete = 'bulk_delete'
+  BulkDelete = 'bulk_delete',
 }
 
 /**
@@ -153,7 +154,7 @@ export enum QueryOperator {
   In = 'in',
   NotIn = 'nin',
   Like = 'like',
-  NotLike = 'nlike'
+  NotLike = 'nlike',
 }
 
 /**
@@ -386,7 +387,7 @@ export enum DatabaseEvent {
   CacheMiss = 'cache:miss',
   CacheHit = 'cache:hit',
   BufferFlushed = 'buffer:flushed',
-  ErrorOccurred = 'error:occurred'
+  ErrorOccurred = 'error:occurred',
 }
 
 /**
@@ -402,7 +403,9 @@ export interface EventPayload<T = any> {
 /**
  * Event listener type
  */
-export type EventListener<T = any> = (payload: EventPayload<T>) => void | Promise<void>;
+export type EventListener<T = any> = (
+  payload: EventPayload<T>
+) => void | Promise<void>;
 
 // ===== ADVANCED CONDITIONAL TYPES =====
 
@@ -462,13 +465,15 @@ export interface ValidationResult {
 /**
  * Schema validation for API requests
  */
-export type ValidatedRequest<T> = {
-  valid: true;
-  data: T;
-} | {
-  valid: false;
-  errors: ValidationResult['errors'];
-};
+export type ValidatedRequest<T> =
+  | {
+      valid: true;
+      data: T;
+    }
+  | {
+      valid: false;
+      errors: ValidationResult['errors'];
+    };
 
 // ===== GENERIC REPOSITORY PATTERN =====
 
@@ -498,12 +503,12 @@ export function isDatabaseValue(value: unknown): value is DatabaseValue {
     typeof value === 'boolean' ||
     value instanceof Date ||
     value instanceof Buffer ||
-    (typeof value === 'object' && 
-     value !== null && 
-     'lat' in value && 
-     'lng' in value &&
-     typeof (value as any).lat === 'number' &&
-     typeof (value as any).lng === 'number')
+    (typeof value === 'object' &&
+      value !== null &&
+      'lat' in value &&
+      'lng' in value &&
+      typeof (value as any).lat === 'number' &&
+      typeof (value as any).lng === 'number')
   );
 }
 
@@ -551,5 +556,5 @@ export default {
   QueryOperator,
   DatabaseEvent,
   isDatabaseValue,
-  isCoordinates
+  isCoordinates,
 } as const;

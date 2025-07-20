@@ -22,16 +22,20 @@ export class TableStorageManager {
   public readonly tableName: string;
   public readonly schemaFilePath: string;
   public readonly dataFilePath: string;
-  
+
   private fileManager: FileManager;
   private schema: Schema | null = null;
   private bufferSchema: BufferSchema | null = null;
 
-  constructor(storageBasePath: string, databaseName: string, tableName: string) {
+  constructor(
+    storageBasePath: string,
+    databaseName: string,
+    tableName: string
+  ) {
     this.storageBasePath = storageBasePath;
     this.databaseName = databaseName;
     this.tableName = tableName;
-    
+
     this.schemaFilePath = path.join(
       storageBasePath,
       databaseName,
@@ -65,8 +69,10 @@ export class TableStorageManager {
     if (this.schema && !force) {
       return;
     }
-    
-    const schemaData = JSON.parse(await fs.readFile(this.schemaFilePath, 'utf8'));
+
+    const schemaData = JSON.parse(
+      await fs.readFile(this.schemaFilePath, 'utf8')
+    );
     this.schema = Schema.fromJSON(schemaData);
     this.bufferSchema = parseBufferSchema(this.schema);
   }
@@ -144,7 +150,7 @@ export class TableStorageManager {
   getPaths(): TableStoragePaths {
     return {
       schema: this.schemaFilePath,
-      data: this.dataFilePath
+      data: this.dataFilePath,
     };
   }
 

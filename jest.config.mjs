@@ -3,27 +3,30 @@ export default {
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      useESM: true,
-      tsconfig: {
-        module: 'ES2022',
-        target: 'ES2022'
-      }
-    }]
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          module: 'ES2022',
+          target: 'ES2022',
+        },
+      },
+    ],
   },
   testMatch: [
     '**/test/**/*.test.ts',
     '**/test-e2e/**/*.test.ts',
-    '**/benchmarks/**/*.bench.ts'
+    '**/benchmarks/**/*.bench.ts',
   ],
   collectCoverageFrom: [
     'engine/**/*.ts',
     'http/**/*.ts',
     '!**/*.d.ts',
-    '!**/node_modules/**'
+    '!**/node_modules/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
@@ -33,7 +36,7 @@ export default {
   maxWorkers: process.env.CI ? 1 : undefined,
   forceExit: true,
   detectOpenHandles: true,
-  // Additional CI stability settings  
+  // Additional CI stability settings
   maxConcurrency: process.env.CI ? 1 : 5,
-  workerIdleMemoryLimit: process.env.CI ? '512MB' : undefined
+  workerIdleMemoryLimit: process.env.CI ? '512MB' : undefined,
 };

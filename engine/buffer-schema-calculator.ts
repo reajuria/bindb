@@ -49,26 +49,24 @@ export interface SchemaValidation {
  * Column size handler function type
  */
 type ColumnSizeHandler = (
-  column: ColumnDefinition, 
-  bufferSchema: Record<string, BufferSchemaColumn>, 
-  database?: string, 
+  column: ColumnDefinition,
+  bufferSchema: Record<string, BufferSchemaColumn>,
+  database?: string,
   table?: string
 ) => number;
 
 // Column size handlers for each type
 const columnSizeHandlers: Record<Types, ColumnSizeHandler> = {
-  [Types.UniqueIdentifier]: (column, bufferSchema, database, table) => {
-    if (bufferSchema[column.name]) {
-      bufferSchema[column.name]['meta'] = { database, table };
-    }
+  [Types.UniqueIdentifier]: (_column, _bufferSchema, _database, _table) => {
     return UNIQUE_IDENTIFIER_SIZE;
   },
-  [Types.Text]: (column) => UINT16_SIZE + (column.length ?? DEFAULT_TEXT_LENGTH) * 4,
+  [Types.Text]: column =>
+    UINT16_SIZE + (column.length ?? DEFAULT_TEXT_LENGTH) * 4,
   [Types.Number]: () => DOUBLE_SIZE,
   [Types.Date]: () => DOUBLE_SIZE,
   [Types.UpdatedAt]: () => DOUBLE_SIZE,
   [Types.Boolean]: () => BYTE_SIZE,
-  [Types.Buffer]: (column) => column.length || 0,
+  [Types.Buffer]: column => column.length || 0,
   [Types.Coordinates]: () => COORDINATES_SIZE,
 };
 
@@ -76,7 +74,7 @@ const columnSizeHandlers: Record<Types, ColumnSizeHandler> = {
  * Compute the buffer size and layout for each column in a schema
  */
 export function calculateBufferSchema(schema: Schema): BufferSchema {
-  const { database, table, columns } = schema;
+  const { database: _database, table: _table, columns } = schema;
   let position = 1; // Start at position 1 to leave space for row status flag
   const bufferSchema: Record<string, BufferSchemaColumn> = {};
 
@@ -102,8 +100,8 @@ export function calculateBufferSchema(schema: Schema): BufferSchema {
     if (!handler) {
       throw new Error(`Unknown column type: ${column.type}`);
     }
-    
-    position += handler(column, bufferSchema, database, table);
+
+    position += handler(column, bufferSchema, _database, _table);
 
     // Add null flag byte
     position += BYTE_SIZE;
@@ -122,16 +120,16 @@ export function calculateBufferSchema(schema: Schema): BufferSchema {
  * Get column size information for a specific column type
  */
 export function getColumnSize(
-  columnType: Types, 
-  column: ColumnDefinition, 
-  database?: string, 
+  columnType: Types,
+  column: ColumnDefinition,
+  database?: string,
   table?: string
 ): number {
   const handler = columnSizeHandlers[columnType];
   if (!handler) {
     throw new Error(`Unknown column type: ${columnType}`);
   }
-  
+
   // Create minimal buffer schema for size calculation
   const tempBufferSchema: Record<string, BufferSchemaColumn> = {
     [column.name]: {
@@ -139,66 +137,73 @@ export function getColumnSize(
       offset: 0,
       size: 0,
       nullFlag: 0,
-    }
+    },
   };
-  
+
   return handler(column, tempBufferSchema, database, table);
 }
 
 /**
  * Validate buffer schema structure
  */
-export function validateBufferSchema(bufferSchema: BufferSchema): SchemaValidation {
+export function validateBufferSchema(
+  bufferSchema: BufferSchema
+): SchemaValidation {
   const errors: string[] = [];
-  
+
   if (!bufferSchema.schema || !bufferSchema.size) {
     errors.push('Buffer schema must have schema and size properties');
     return { isValid: false, errors };
   }
-  
+
   if (typeof bufferSchema.size !== 'number' || bufferSchema.size <= 0) {
     errors.push('Buffer schema size must be a positive number');
   }
-  
+
   // Check if ID field exists
   if (!bufferSchema.schema[ID_FIELD]) {
     errors.push(`Buffer schema must include ${ID_FIELD} field`);
   }
-  
+
   // Validate each column in schema
   for (const [columnName, columnInfo] of Object.entries(bufferSchema.schema)) {
     if (typeof columnInfo.offset !== 'number' || columnInfo.offset < 0) {
       errors.push(`Column ${columnName} must have valid offset`);
     }
-    
+
     if (typeof columnInfo.size !== 'number' || columnInfo.size <= 0) {
       errors.push(`Column ${columnName} must have positive size`);
     }
-    
+
     if (!Object.values(Types).includes(columnInfo.type)) {
       errors.push(`Column ${columnName} has invalid type: ${columnInfo.type}`);
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 /**
  * Get buffer schema statistics
  */
-export function getBufferSchemaStats(bufferSchema: BufferSchema): BufferSchemaStats {
+export function getBufferSchemaStats(
+  bufferSchema: BufferSchema
+): BufferSchemaStats {
   const columnCount = Object.keys(bufferSchema.schema).length;
   const columnSizes = Object.values(bufferSchema.schema).map(col => col.size);
-  
+
   return {
     totalSize: bufferSchema.size,
     columnCount,
-    averageColumnSize: columnCount > 0 ? columnSizes.reduce((a, b) => a + b, 0) / columnCount : 0,
+    averageColumnSize:
+      columnCount > 0
+        ? columnSizes.reduce((a, b) => a + b, 0) / columnCount
+        : 0,
     largestColumnSize: columnCount > 0 ? Math.max(...columnSizes) : 0,
     smallestColumnSize: columnCount > 0 ? Math.min(...columnSizes) : 0,
-    overhead: bufferSchema.size - columnSizes.reduce((a, b) => a + b, 0) // Includes status flag and null flags
+    overhead: bufferSchema.size - columnSizes.reduce((a, b) => a + b, 0), // Includes status flag and null flags
   };
 }

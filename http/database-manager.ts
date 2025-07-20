@@ -1,9 +1,17 @@
 import { Database } from '../engine/database.js';
 import { Schema } from '../engine/schema.js';
 import type { RowData } from '../engine/row.js';
-import { TypeMapper, type SchemaValidationResult, type ExternalSchema } from './type-mapper.js';
+import {
+  TypeMapper,
+  type SchemaValidationResult,
+  type ExternalSchema,
+} from './type-mapper.js';
 import { BatchProcessor, type BatchConfig } from './batch-processor.js';
-import { ResultFormatter, type FormattingConfig, type OperationMetadata } from './result-formatter.js';
+import {
+  ResultFormatter,
+  type FormattingConfig,
+  type OperationMetadata,
+} from './result-formatter.js';
 
 /**
  * Database manager configuration options
@@ -103,7 +111,7 @@ export class DatabaseManager {
 
   constructor(options: DatabaseManagerOptions = {}) {
     this.storagePath = process.env.BINDB_STORAGE_PATH || './data';
-    
+
     // Initialize specialized components
     this.typeMapper = new TypeMapper();
     this.batchProcessor = new BatchProcessor(options.batch || {});
@@ -124,27 +132,38 @@ export class DatabaseManager {
   /**
    * Create a table with schema
    */
-  async createTable(database: string, table: string, schema: ExternalSchema): Promise<OperationResult> {
+  async createTable(
+    database: string,
+    table: string,
+    schema: ExternalSchema
+  ): Promise<OperationResult> {
     const startTime = performance.now();
-    
+
     try {
       // Validate and convert schema using TypeMapper
-      const validationResult: SchemaValidationResult = this.typeMapper.validateSchema(schema);
+      const validationResult: SchemaValidationResult =
+        this.typeMapper.validateSchema(schema);
       if (!validationResult.isValid) {
-        throw new Error(`Schema validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Schema validation failed: ${validationResult.errors.join(', ')}`
+        );
       }
 
       const convertedSchema = this.typeMapper.convertSchema(schema);
-      
+
       // Create table
       const db = await this.getDatabase(database);
-      const tableSchema = Schema.create(database, table, convertedSchema as any);
+      const tableSchema = Schema.create(
+        database,
+        table,
+        convertedSchema as any
+      );
       await db.createTable(table, tableSchema);
-      
+
       const result = {
         database,
         table,
-        schema: convertedSchema
+        schema: convertedSchema,
       };
 
       // Format result
@@ -152,16 +171,15 @@ export class DatabaseManager {
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'createTable',
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
     }
   }
@@ -169,32 +187,35 @@ export class DatabaseManager {
   /**
    * Insert one record
    */
-  async insertOne(database: string, table: string, record: RowData): Promise<InsertResult> {
+  async insertOne(
+    database: string,
+    table: string,
+    record: RowData
+  ): Promise<InsertResult> {
     const startTime = performance.now();
-    
+
     try {
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
         throw new Error(`Table '${table}' not found in database '${database}'`);
       }
-      
+
       const result = await tableInstance.insert(record);
 
       return this.resultFormatter.formatInsertResult(result, {
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'insert',
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       }) as any;
     }
   }
@@ -202,9 +223,13 @@ export class DatabaseManager {
   /**
    * Insert multiple records with optimized batching
    */
-  async insertMany(database: string, table: string, records: RowData[]): Promise<BulkInsertResult> {
+  async insertMany(
+    database: string,
+    table: string,
+    records: RowData[]
+  ): Promise<BulkInsertResult> {
     const startTime = performance.now();
-    
+
     try {
       if (!Array.isArray(records) || records.length === 0) {
         const result: RowData[] = [];
@@ -212,7 +237,7 @@ export class DatabaseManager {
           database,
           table,
           startTime,
-          endTime: performance.now()
+          endTime: performance.now(),
         });
       }
 
@@ -228,21 +253,23 @@ export class DatabaseManager {
         async (batch: RowData[]) => await tableInstance.bulkInsert(batch)
       );
 
-      return this.resultFormatter.formatBulkInsertResult(processingResult.results.flat(), {
-        database,
-        table,
-        batchInfo: processingResult.statistics,
-        startTime,
-        endTime: performance.now()
-      });
-
+      return this.resultFormatter.formatBulkInsertResult(
+        processingResult.results.flat(),
+        {
+          database,
+          table,
+          batchInfo: processingResult.statistics,
+          startTime,
+          endTime: performance.now(),
+        }
+      );
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'bulkInsert',
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       }) as any;
     }
   }
@@ -250,9 +277,13 @@ export class DatabaseManager {
   /**
    * Find one record by ID
    */
-  async findOne(database: string, table: string, filter: FilterCriteria): Promise<GetResult> {
+  async findOne(
+    database: string,
+    table: string,
+    filter: FilterCriteria
+  ): Promise<GetResult> {
     const startTime = performance.now();
-    
+
     try {
       if (!filter || !filter.id) {
         throw new Error('Filter must contain an id field');
@@ -263,7 +294,7 @@ export class DatabaseManager {
       if (!tableInstance) {
         throw new Error(`Table '${table}' not found in database '${database}'`);
       }
-      
+
       const result = await tableInstance.get(filter.id);
 
       return this.resultFormatter.formatGetResult(result, {
@@ -271,9 +302,8 @@ export class DatabaseManager {
         table,
         id: filter.id,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'findOne',
@@ -281,7 +311,7 @@ export class DatabaseManager {
         table,
         id: filter?.id,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       }) as any;
     }
   }
@@ -289,9 +319,14 @@ export class DatabaseManager {
   /**
    * Update one record by ID
    */
-  async updateOne(database: string, table: string, filter: FilterCriteria, update: UpdateData): Promise<UpdateResult> {
+  async updateOne(
+    database: string,
+    table: string,
+    filter: FilterCriteria,
+    update: UpdateData
+  ): Promise<UpdateResult> {
     const startTime = performance.now();
-    
+
     try {
       if (!filter || !filter.id) {
         throw new Error('Filter must contain an id field');
@@ -302,14 +337,14 @@ export class DatabaseManager {
       if (!tableInstance) {
         throw new Error(`Table '${table}' not found in database '${database}'`);
       }
-      
+
       const updateData = update.$set || update;
       const result = await tableInstance.update(filter.id, updateData);
-      
+
       const formattedResult = {
         matchedCount: result ? 1 : 0,
         modifiedCount: result ? 1 : 0,
-        record: result
+        record: result,
       };
 
       return this.resultFormatter.formatUpdateResult(formattedResult, {
@@ -318,9 +353,8 @@ export class DatabaseManager {
         id: filter.id,
         fieldsUpdated: Object.keys(updateData),
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'update',
@@ -328,7 +362,7 @@ export class DatabaseManager {
         table,
         id: filter?.id,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       }) as any;
     }
   }
@@ -336,9 +370,13 @@ export class DatabaseManager {
   /**
    * Delete one record by ID
    */
-  async deleteOne(database: string, table: string, filter: FilterCriteria): Promise<DeleteResult> {
+  async deleteOne(
+    database: string,
+    table: string,
+    filter: FilterCriteria
+  ): Promise<DeleteResult> {
     const startTime = performance.now();
-    
+
     try {
       if (!filter || !filter.id) {
         throw new Error('Filter must contain an id field');
@@ -349,9 +387,9 @@ export class DatabaseManager {
       if (!tableInstance) {
         throw new Error(`Table '${table}' not found in database '${database}'`);
       }
-      
+
       const deleted = await tableInstance.delete(filter.id);
-      
+
       const result = { deletedCount: deleted ? 1 : 0 };
 
       return this.resultFormatter.formatDeleteResult(result, {
@@ -359,9 +397,8 @@ export class DatabaseManager {
         table,
         id: filter.id,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'delete',
@@ -369,7 +406,7 @@ export class DatabaseManager {
         table,
         id: filter?.id,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       }) as any;
     }
   }
@@ -379,14 +416,14 @@ export class DatabaseManager {
    */
   async countRecords(database: string, table: string): Promise<CountResult> {
     const startTime = performance.now();
-    
+
     try {
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
         throw new Error(`Table '${table}' not found in database '${database}'`);
       }
-      
+
       // Use table stats for efficient counting
       const stats = tableInstance.getStats();
       const count = stats.slots.activeSlots;
@@ -395,16 +432,15 @@ export class DatabaseManager {
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'count',
         database,
         table,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       }) as any;
     }
   }
@@ -414,50 +450,54 @@ export class DatabaseManager {
    */
   async getStats(database: string, table?: string): Promise<OperationResult> {
     const startTime = performance.now();
-    
+
     try {
       const db = await this.getDatabase(database);
-      
+
       if (table) {
         const tableInstance = db.table(table);
         if (!tableInstance) {
-          throw new Error(`Table '${table}' not found in database '${database}'`);
+          throw new Error(
+            `Table '${table}' not found in database '${database}'`
+          );
         }
-        
+
         const tableStats = tableInstance.getStats();
-        
-        return this.resultFormatter.wrapResponse({
-          database,
-          table,
-          stats: tableStats
-        }, {
-          operation: 'getTableStats',
-          startTime,
-          endTime: performance.now()
-        });
+
+        return this.resultFormatter.wrapResponse(
+          {
+            database,
+            table,
+            stats: tableStats,
+          },
+          {
+            operation: 'getTableStats',
+            startTime,
+            endTime: performance.now(),
+          }
+        );
       } else {
         // Return database-level stats
         const databaseStats = {
           name: database,
           tables: db.getTableNames(),
           tableCount: db.tableCount,
-          performance: this.batchProcessor.getPerformanceStats()
+          performance: this.batchProcessor.getPerformanceStats(),
         };
-        
+
         return this.resultFormatter.wrapResponse(databaseStats, {
           operation: 'getDatabaseStats',
           startTime,
-          endTime: performance.now()
+          endTime: performance.now(),
         });
       }
-
     } catch (error) {
       return this.resultFormatter.formatError(error as Error, {
         operation: 'getStats',
         database,
         table: table as any,
         startTime,
-        endTime: performance.now()
+        endTime: performance.now(),
       });
     }
   }
@@ -469,13 +509,13 @@ export class DatabaseManager {
     return {
       databases: {
         active: this.databases.size,
-        names: Array.from(this.databases.keys())
+        names: Array.from(this.databases.keys()),
       },
       batchProcessor: this.batchProcessor.getPerformanceStats(),
       typeMapper: {
-        supportedTypes: Object.keys(this.typeMapper.getTypeMappings()).length
+        supportedTypes: Object.keys(this.typeMapper.getTypeMappings()).length,
       },
-      resultFormatter: this.resultFormatter.getConfig()
+      resultFormatter: this.resultFormatter.getConfig(),
     };
   }
 
@@ -486,11 +526,11 @@ export class DatabaseManager {
     if (config.batch) {
       this.batchProcessor.updateConfig(config.batch);
     }
-    
+
     if (config.formatting) {
       this.resultFormatter.updateConfig(config.formatting);
     }
-    
+
     if (config.typeMapping) {
       // Add custom type mappings
       for (const [external, bindb] of Object.entries(config.typeMapping)) {
@@ -507,7 +547,7 @@ export class DatabaseManager {
       await db.close();
     }
     this.databases.clear();
-    
+
     // Clear performance history
     this.batchProcessor.clearPerformanceHistory();
   }

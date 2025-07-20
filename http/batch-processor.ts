@@ -14,8 +14,8 @@ export interface BatchConfig {
  */
 export interface BatchStatistics {
   totalItems: number;
-  batchCount: number;
-  batchSize: number;
+  _batchCount: number;
+  _batchSize: number;
   totalDuration: number;
   averageBatchDuration: number;
   itemsPerSecond: number;
@@ -33,7 +33,7 @@ export interface BatchProcessingResult<T> {
  * Performance tracking data
  */
 interface PerformanceRecord {
-  batchSize: number;
+  _batchSize: number;
   duration: number;
   timestamp: number;
 }
@@ -47,7 +47,7 @@ export interface PerformanceStats {
   optimalBatchSize: number;
   recentPerformance: {
     averageDuration: number;
-    batchSizeRange: [number, number];
+    _batchSizeRange: [number, number];
     sampleSize: number;
   };
 }
@@ -55,10 +55,10 @@ export interface PerformanceStats {
 /**
  * Batch processor function type
  */
-export type BatchProcessorFunction<T, R> = (batch: T[]) => Promise<R>;
+export type BatchProcessorFunction<T, R> = (_batch: T[]) => Promise<R>;
 
 /**
- * BatchProcessor - Handles batch processing and chunking for large operations
+ * BatchProcessor - Handles _batch processing and chunking for large operations
  */
 export class BatchProcessor {
   private config: Required<BatchConfig>;
@@ -71,12 +71,12 @@ export class BatchProcessor {
       maxBatchSize: options.maxBatchSize || 10000,
       minBatchSize: options.minBatchSize || 1,
       autoOptimize: options.autoOptimize !== false,
-      ...options
+      ...options,
     };
   }
 
   /**
-   * Process an array of items in batches
+   * Process an array of items in _batches
    */
   async processBatches<T, R>(
     items: T[],
@@ -96,80 +96,84 @@ export class BatchProcessor {
         results: [],
         statistics: {
           totalItems: 0,
-          batchCount: 0,
-          batchSize: 0,
+          _batchCount: 0,
+          _batchSize: 0,
           totalDuration: 0,
           averageBatchDuration: 0,
-          itemsPerSecond: 0
-        }
+          itemsPerSecond: 0,
+        },
       };
     }
 
-    const batchSize = this.determineBatchSize(items.length, options);
+    const _batchSize = this.determineBatchSize(items.length, options);
     const startTime = performance.now();
     const results: R[] = [];
-    const batchDurations: number[] = [];
+    const _batchDurations: number[] = [];
 
-    // Process in batches
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize);
-      const batchStartTime = performance.now();
-      
+    // Process in _batches
+    for (let i = 0; i < items.length; i += _batchSize) {
+      const _batch = items.slice(i, i + _batchSize);
+      const _batchStartTime = performance.now();
+
       try {
-        const batchResult = await processor(batch);
-        
-        if (Array.isArray(batchResult)) {
-          results.push(...batchResult as R[]);
+        const _batchResult = await processor(_batch);
+
+        if (Array.isArray(_batchResult)) {
+          results.push(...(_batchResult as R[]));
         } else {
-          results.push(batchResult);
+          results.push(_batchResult);
         }
 
-        // Track batch performance
+        // Track _batch performance
         if (this.config.autoOptimize) {
-          const batchDuration = performance.now() - batchStartTime;
-          batchDurations.push(batchDuration);
-          this.recordBatchPerformance(batch.length, batchDuration);
+          const _batchDuration = performance.now() - _batchStartTime;
+          _batchDurations.push(_batchDuration);
+          this.recordBatchPerformance(_batch.length, _batchDuration);
         }
-
       } catch (error) {
         const enhancedError = new Error(
-          `Batch processing failed at items ${i}-${i + batch.length - 1}: ${(error as Error).message}`
+          `Batch processing failed at items ${i}-${i + _batch.length - 1}: ${(error as Error).message}`
         );
-        (enhancedError as any).batchIndex = Math.floor(i / batchSize);
-        (enhancedError as any).batchSize = batch.length;
+        (enhancedError as any)._batchIndex = Math.floor(i / _batchSize);
+        (enhancedError as any)._batchSize = _batch.length;
         (enhancedError as any).originalError = error;
         throw enhancedError;
       }
     }
 
     const totalDuration = performance.now() - startTime;
-    const batchCount = Math.ceil(items.length / batchSize);
-    const averageBatchDuration = batchDurations.length > 0 
-      ? batchDurations.reduce((a, b) => a + b, 0) / batchDurations.length 
-      : 0;
-    
+    const _batchCount = Math.ceil(items.length / _batchSize);
+    const averageBatchDuration =
+      _batchDurations.length > 0
+        ? _batchDurations.reduce((a, b) => a + b, 0) / _batchDurations.length
+        : 0;
+
     return {
       results,
       statistics: {
         totalItems: items.length,
-        batchCount,
-        batchSize,
+        _batchCount,
+        _batchSize,
         totalDuration,
         averageBatchDuration,
-        itemsPerSecond: totalDuration > 0 ? (items.length / totalDuration) * 1000 : 0
-      }
+        itemsPerSecond:
+          totalDuration > 0 ? (items.length / totalDuration) * 1000 : 0,
+      },
     };
   }
 
   /**
-   * Determine optimal batch size
+   * Determine optimal _batch size
    */
-  private determineBatchSize(itemCount: number, options: Partial<BatchConfig> = {}): number {
-    const batchSize = options.defaultBatchSize || this.config.defaultBatchSize;
+  private determineBatchSize(
+    itemCount: number,
+    options: Partial<BatchConfig> = {}
+  ): number {
+    const _batchSize = options.defaultBatchSize || this.config.defaultBatchSize;
     const maxBatchSize = options.maxBatchSize || this.config.maxBatchSize;
     const minBatchSize = options.minBatchSize || this.config.minBatchSize;
 
-    let determinedSize = batchSize;
+    let determinedSize = _batchSize;
 
     // Auto-optimize based on performance history
     if (this.config.autoOptimize && this.performanceHistory.length >= 3) {
@@ -180,40 +184,44 @@ export class BatchProcessor {
     }
 
     // Apply constraints
-    determinedSize = Math.max(minBatchSize, Math.min(maxBatchSize, determinedSize));
-    
+    determinedSize = Math.max(
+      minBatchSize,
+      Math.min(maxBatchSize, determinedSize)
+    );
+
     // Don't exceed item count
     return Math.min(determinedSize, itemCount);
   }
 
   /**
-   * Calculate optimal batch size based on performance history
+   * Calculate optimal _batch size based on performance history
    */
   private calculateOptimalBatchSize(): number {
     if (this.performanceHistory.length < 3) {
       return this.config.defaultBatchSize;
     }
 
-    // Find the batch size with the best throughput (items per millisecond)
-    const recentHistory = this.performanceHistory.slice(-20); // Last 20 batches
+    // Find the _batch size with the best throughput (items per millisecond)
+    const recentHistory = this.performanceHistory.slice(-20); // Last 20 _batches
     const performanceMap = new Map<number, number[]>();
 
     for (const record of recentHistory) {
-      const throughput = record.batchSize / record.duration;
-      if (!performanceMap.has(record.batchSize)) {
-        performanceMap.set(record.batchSize, []);
+      const throughput = record._batchSize / record.duration;
+      if (!performanceMap.has(record._batchSize)) {
+        performanceMap.set(record._batchSize, []);
       }
-      performanceMap.get(record.batchSize)!.push(throughput);
+      performanceMap.get(record._batchSize)!.push(throughput);
     }
 
     let bestBatchSize = this.config.defaultBatchSize;
     let bestThroughput = 0;
 
-    for (const [batchSize, throughputs] of performanceMap) {
-      const avgThroughput = throughputs.reduce((a, b) => a + b, 0) / throughputs.length;
+    for (const [_batchSize, throughputs] of performanceMap) {
+      const avgThroughput =
+        throughputs.reduce((a, b) => a + b, 0) / throughputs.length;
       if (avgThroughput > bestThroughput) {
         bestThroughput = avgThroughput;
-        bestBatchSize = batchSize;
+        bestBatchSize = _batchSize;
       }
     }
 
@@ -221,13 +229,13 @@ export class BatchProcessor {
   }
 
   /**
-   * Record batch performance for optimization
+   * Record _batch performance for optimization
    */
-  private recordBatchPerformance(batchSize: number, duration: number): void {
+  private recordBatchPerformance(_batchSize: number, duration: number): void {
     this.performanceHistory.push({
-      batchSize,
+      _batchSize,
       duration,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Limit history size
@@ -247,22 +255,31 @@ export class BatchProcessor {
         optimalBatchSize: this.config.defaultBatchSize,
         recentPerformance: {
           averageDuration: 0,
-          batchSizeRange: [this.config.minBatchSize, this.config.maxBatchSize],
-          sampleSize: 0
-        }
+          _batchSizeRange: [this.config.minBatchSize, this.config.maxBatchSize],
+          sampleSize: 0,
+        },
       };
     }
 
-    const totalDuration = this.performanceHistory.reduce((sum, record) => sum + record.duration, 0);
+    const totalDuration = this.performanceHistory.reduce(
+      (sum, record) => sum + record.duration,
+      0
+    );
     const averageDuration = totalDuration / this.performanceHistory.length;
-    
+
     const recentHistory = this.performanceHistory.slice(-10);
-    const recentDuration = recentHistory.reduce((sum, record) => sum + record.duration, 0);
-    const recentAverage = recentHistory.length > 0 ? recentDuration / recentHistory.length : 0;
-    
-    const batchSizes = this.performanceHistory.map(record => record.batchSize);
-    const minBatchSize = Math.min(...batchSizes);
-    const maxBatchSize = Math.max(...batchSizes);
+    const recentDuration = recentHistory.reduce(
+      (sum, record) => sum + record.duration,
+      0
+    );
+    const recentAverage =
+      recentHistory.length > 0 ? recentDuration / recentHistory.length : 0;
+
+    const _batchSizes = this.performanceHistory.map(
+      record => record._batchSize
+    );
+    const minBatchSize = Math.min(..._batchSizes);
+    const maxBatchSize = Math.max(..._batchSizes);
 
     return {
       totalBatches: this.performanceHistory.length,
@@ -270,9 +287,9 @@ export class BatchProcessor {
       optimalBatchSize: this.calculateOptimalBatchSize(),
       recentPerformance: {
         averageDuration: recentAverage,
-        batchSizeRange: [minBatchSize, maxBatchSize],
-        sampleSize: recentHistory.length
-      }
+        _batchSizeRange: [minBatchSize, maxBatchSize],
+        sampleSize: recentHistory.length,
+      },
     };
   }
 
@@ -282,7 +299,7 @@ export class BatchProcessor {
   updateConfig(newConfig: Partial<BatchConfig>): void {
     this.config = {
       ...this.config,
-      ...newConfig
+      ...newConfig,
     };
   }
 
@@ -301,7 +318,7 @@ export class BatchProcessor {
   }
 
   /**
-   * Process batches with parallel execution
+   * Process _batches with parallel execution
    */
   async processBatchesParallel<T, R>(
     items: T[],
@@ -309,88 +326,90 @@ export class BatchProcessor {
     options: Partial<BatchConfig & { maxConcurrency?: number }> = {}
   ): Promise<BatchProcessingResult<R[]>> {
     const maxConcurrency = options.maxConcurrency || 3;
-    const batchSize = this.determineBatchSize(items.length, options);
-    
+    const _batchSize = this.determineBatchSize(items.length, options);
+
     if (items.length === 0) {
       return {
         results: [],
         statistics: {
           totalItems: 0,
-          batchCount: 0,
-          batchSize: 0,
+          _batchCount: 0,
+          _batchSize: 0,
           totalDuration: 0,
           averageBatchDuration: 0,
-          itemsPerSecond: 0
-        }
+          itemsPerSecond: 0,
+        },
       };
     }
 
     const startTime = performance.now();
-    const batches: T[][] = [];
-    
-    // Create batches
-    for (let i = 0; i < items.length; i += batchSize) {
-      batches.push(items.slice(i, i + batchSize));
+    const _batches: T[][] = [];
+
+    // Create _batches
+    for (let i = 0; i < items.length; i += _batchSize) {
+      _batches.push(items.slice(i, i + _batchSize));
     }
 
     const results: R[] = [];
-    const batchDurations: number[] = [];
+    const _batchDurations: number[] = [];
 
-    // Process batches with controlled concurrency
-    for (let i = 0; i < batches.length; i += maxConcurrency) {
-      const concurrentBatches = batches.slice(i, i + maxConcurrency);
-      
-      const batchPromises = concurrentBatches.map(async (batch, index) => {
-        const batchStartTime = performance.now();
-        
+    // Process _batches with controlled concurrency
+    for (let i = 0; i < _batches.length; i += maxConcurrency) {
+      const concurrentBatches = _batches.slice(i, i + maxConcurrency);
+
+      const _batchPromises = concurrentBatches.map(async (_batch, index) => {
+        const _batchStartTime = performance.now();
+
         try {
-          const result = await processor(batch);
-          const duration = performance.now() - batchStartTime;
-          
+          const result = await processor(_batch);
+          const duration = performance.now() - _batchStartTime;
+
           if (this.config.autoOptimize) {
-            batchDurations.push(duration);
-            this.recordBatchPerformance(batch.length, duration);
+            _batchDurations.push(duration);
+            this.recordBatchPerformance(_batch.length, duration);
           }
-          
+
           return result;
         } catch (error) {
-          const batchIndex = i + index;
+          const _batchIndex = i + index;
           const enhancedError = new Error(
-            `Parallel batch processing failed at batch ${batchIndex}: ${(error as Error).message}`
+            `Parallel _batch processing failed at _batch ${_batchIndex}: ${(error as Error).message}`
           );
-          (enhancedError as any).batchIndex = batchIndex;
-          (enhancedError as any).batchSize = batch.length;
+          (enhancedError as any)._batchIndex = _batchIndex;
+          (enhancedError as any)._batchSize = _batch.length;
           (enhancedError as any).originalError = error;
           throw enhancedError;
         }
       });
 
-      const batchResults = await Promise.all(batchPromises);
-      
-      for (const batchResult of batchResults) {
-        if (Array.isArray(batchResult)) {
-          results.push(...batchResult as R[]);
+      const _batchResults = await Promise.all(_batchPromises);
+
+      for (const _batchResult of _batchResults) {
+        if (Array.isArray(_batchResult)) {
+          results.push(...(_batchResult as R[]));
         } else {
-          results.push(batchResult);
+          results.push(_batchResult);
         }
       }
     }
 
     const totalDuration = performance.now() - startTime;
-    const averageBatchDuration = batchDurations.length > 0 
-      ? batchDurations.reduce((a, b) => a + b, 0) / batchDurations.length 
-      : 0;
+    const averageBatchDuration =
+      _batchDurations.length > 0
+        ? _batchDurations.reduce((a, b) => a + b, 0) / _batchDurations.length
+        : 0;
 
     return {
       results,
       statistics: {
         totalItems: items.length,
-        batchCount: batches.length,
-        batchSize,
+        _batchCount: _batches.length,
+        _batchSize,
         totalDuration,
         averageBatchDuration,
-        itemsPerSecond: totalDuration > 0 ? (items.length / totalDuration) * 1000 : 0
-      }
+        itemsPerSecond:
+          totalDuration > 0 ? (items.length / totalDuration) * 1000 : 0,
+      },
     };
   }
 }

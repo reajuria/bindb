@@ -21,9 +21,9 @@ export interface SlotStats {
 }
 
 export class SlotManager {
-  private idMap: (string | null)[] = [];        // Array mapping slot index to record ID
-  private idToSlot: Map<string, number> = new Map(); // Reverse lookup: id -> slot index  
-  private freeSlots: number[] = [];             // Stack of available slots for reuse
+  private idMap: (string | null)[] = []; // Array mapping slot index to record ID
+  private idToSlot: Map<string, number> = new Map(); // Reverse lookup: id -> slot index
+  private freeSlots: number[] = []; // Stack of available slots for reuse
 
   /**
    * Find an empty slot for a new record
@@ -31,9 +31,9 @@ export class SlotManager {
    */
   findEmptySlot(): number {
     // Reuse a deleted slot if available, otherwise append new slot
-    return this.freeSlots.length > 0 
-      ? this.freeSlots.pop()! + 1  // Convert to 1-based index
-      : this.idMap.length + 1;     // Append new slot
+    return this.freeSlots.length > 0
+      ? this.freeSlots.pop()! + 1 // Convert to 1-based index
+      : this.idMap.length + 1; // Append new slot
   }
 
   /**
@@ -44,10 +44,10 @@ export class SlotManager {
   allocateSlot(id: string): number {
     const slot = this.findEmptySlot();
     const slotIndex = slot - 1; // Convert to 0-based for internal storage
-    
+
     this.idMap[slotIndex] = id;
     this.idToSlot.set(id, slotIndex);
-    
+
     return slotIndex;
   }
 
@@ -61,11 +61,11 @@ export class SlotManager {
     if (slot === undefined) {
       return false;
     }
-    
+
     this.idMap[slot] = null;
     this.idToSlot.delete(id);
     this.freeSlots.push(slot); // Mark slot as available for reuse
-    
+
     return true;
   }
 
@@ -93,7 +93,7 @@ export class SlotManager {
    */
   loadSlots(slotData: SlotData[]): void {
     this.clear();
-    
+
     for (const { slot, id } of slotData) {
       if (id === null) {
         this.idMap[slot] = null;
@@ -123,9 +123,8 @@ export class SlotManager {
       totalSlots: this.idMap.length,
       activeSlots,
       freeSlots: this.freeSlots.length,
-      slotUtilization: this.idMap.length > 0 
-        ? activeSlots / this.idMap.length 
-        : 0
+      slotUtilization:
+        this.idMap.length > 0 ? activeSlots / this.idMap.length : 0,
     };
   }
 

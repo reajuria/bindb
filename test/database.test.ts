@@ -9,26 +9,26 @@ describe('Database', () => {
   async function createTempDir(): Promise<string> {
     return fs.mkdtemp(path.join(os.tmpdir(), 'bindb-'));
   }
-  
+
   it('database metadata persistence', async () => {
     const dir: string = await createTempDir();
     let db: Database | undefined;
     let db2: Database | undefined;
-    
+
     try {
       db = await Database.create(dir, 'testdb');
-      
+
       const columns: ColumnDefinition[] = [
         { name: 'name', type: Types.Text, length: 10 },
       ];
       const schema = Schema.create('testdb', 'items', columns);
-      
+
       await db.createTable('items', schema);
-      
+
       const metadataPath: string = path.join(dir, 'testdb', 'db_metadata.json');
       const stat = await fs.stat(metadataPath);
       expect(stat.isFile()).toBeTruthy();
-  
+
       db2 = new Database(dir, 'testdb');
       await db2.initDatabase();
       expect(db2.table('items')).toBeTruthy();
@@ -39,5 +39,4 @@ describe('Database', () => {
       await fs.rm(dir, { recursive: true, force: true });
     }
   });
-  
 });

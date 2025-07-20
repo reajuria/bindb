@@ -20,16 +20,16 @@ export function uniqueId(...args: string[]): string {
   const buffer = Buffer.alloc(UNIQUE_IDENTIFIER_SIZE);
   const hash = strHash(4, ...args);
   buffer.write(hash, 0, 4, 'hex');
-  
+
   // Use high-resolution timestamp with counter for uniqueness
   const nowInMs = Date.now();
-  
+
   // Combine timestamp + counter into 8 bytes
   // 6 bytes for timestamp (milliseconds), 2 bytes for counter
   const timestampBigInt = BigInt(nowInMs);
   const counterValue = counter++ % 65536;
-  
-  buffer.writeUIntBE(Number(timestampBigInt & 0xFFFFFFFFFFFFn), 4, 6);
+
+  buffer.writeUIntBE(Number(timestampBigInt & 0xffffffffffffn), 4, 6);
   buffer.writeUInt16BE(counterValue, 10);
 
   return buffer.toString('hex');
@@ -42,26 +42,28 @@ export function uniqueId(...args: string[]): string {
 export function createSchemaIdGenerator(schema: Schema): SchemaIdGenerator {
   // Get pre-computed hash buffer from schema (bytes 0-3)
   const tableHashBuffer = schema.tableHashBuffer;
-  
+
   if (!tableHashBuffer) {
-    throw new Error('Schema must have database and table names set to generate IDs');
+    throw new Error(
+      'Schema must have database and table names set to generate IDs'
+    );
   }
-  
+
   // Return optimized generator that reuses the schema's cached hash
   return (): string => {
     const buffer = Buffer.alloc(UNIQUE_IDENTIFIER_SIZE);
-    
+
     // Copy pre-computed hash (bytes 0-3) - ULTRA FAST!
     tableHashBuffer.copy(buffer, 0, 0, 4);
-    
+
     // Only compute dynamic parts (bytes 4-11)
     const nowInMs = Date.now();
     const timestampBigInt = BigInt(nowInMs);
     const counterValue = counter++ % 65536;
-    
-    buffer.writeUIntBE(Number(timestampBigInt & 0xFFFFFFFFFFFFn), 4, 6);
+
+    buffer.writeUIntBE(Number(timestampBigInt & 0xffffffffffffn), 4, 6);
     buffer.writeUInt16BE(counterValue, 10);
-    
+
     return buffer.toString('hex');
   };
 }

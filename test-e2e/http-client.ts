@@ -85,11 +85,15 @@ export class HTTPClient {
   /**
    * Make HTTP request
    */
-  async request<T = any>(method: string, path: string, data: any = null): Promise<HTTPResponse<T>> {
+  async request<T = any>(
+    method: string,
+    path: string,
+    data: any = null
+  ): Promise<HTTPResponse<T>> {
     return new Promise((resolve, reject) => {
       const url = new URL(path, this.baseUrl);
       const body = data ? JSON.stringify(data) : null;
-      
+
       const options: http.RequestOptions = {
         hostname: url.hostname,
         port: url.port,
@@ -97,32 +101,34 @@ export class HTTPClient {
         method,
         headers: {
           'Content-Type': 'application/json',
-          ...(body && { 'Content-Length': Buffer.byteLength(body) })
-        }
+          ...(body && { 'Content-Length': Buffer.byteLength(body) }),
+        },
       };
 
-      const req = http.request(options, (res) => {
+      const req = http.request(options, res => {
         let responseBody = '';
-        
-        res.on('data', (chunk) => {
+
+        res.on('data', chunk => {
           responseBody += chunk;
         });
-        
+
         res.on('end', () => {
           try {
             const parsed = responseBody ? JSON.parse(responseBody) : {};
             resolve({
               status: res.statusCode || 0,
               data: parsed,
-              headers: res.headers
+              headers: res.headers,
             });
           } catch (error) {
-            reject(new Error(`Failed to parse response: ${(error as Error).message}`));
+            reject(
+              new Error(`Failed to parse response: ${(error as Error).message}`)
+            );
           }
         });
       });
 
-      req.on('error', (error) => {
+      req.on('error', error => {
         reject(new Error(`Request failed: ${error.message}`));
       });
 
@@ -195,8 +201,13 @@ export class HTTPClient {
   /**
    * Get table schema
    */
-  async getTableSchema(database: string, table: string): Promise<HTTPResponse<any>> {
-    return this.get(`/v1/table/schema?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`);
+  async getTableSchema(
+    database: string,
+    table: string
+  ): Promise<HTTPResponse<any>> {
+    return this.get(
+      `/v1/table/schema?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`
+    );
   }
 
   /**
@@ -209,15 +220,25 @@ export class HTTPClient {
   /**
    * Bulk insert records
    */
-  async bulkInsert(database: string, table: string, data: Record<string, any>[]): Promise<HTTPResponse<any>> {
+  async bulkInsert(
+    database: string,
+    table: string,
+    data: Record<string, any>[]
+  ): Promise<HTTPResponse<any>> {
     return this.post('/v1/bulkInsert', { database, table, data });
   }
 
   /**
    * Find record by ID
    */
-  async find(database: string, table: string, id: string): Promise<HTTPResponse<FindResponse>> {
-    return this.get<FindResponse>(`/v1/find?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}&id=${encodeURIComponent(id)}`);
+  async find(
+    database: string,
+    table: string,
+    id: string
+  ): Promise<HTTPResponse<FindResponse>> {
+    return this.get<FindResponse>(
+      `/v1/find?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}&id=${encodeURIComponent(id)}`
+    );
   }
 
   /**
@@ -230,7 +251,9 @@ export class HTTPClient {
   /**
    * Delete record
    */
-  async deleteRecord(request: DeleteRequest): Promise<HTTPResponse<DeleteResponse>> {
+  async deleteRecord(
+    request: DeleteRequest
+  ): Promise<HTTPResponse<DeleteResponse>> {
     return this.delete<DeleteResponse>('/v1/delete', request);
   }
 
@@ -238,14 +261,16 @@ export class HTTPClient {
    * Count records
    */
   async count(database: string, table: string): Promise<HTTPResponse<any>> {
-    return this.get(`/v1/count?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`);
+    return this.get(
+      `/v1/count?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`
+    );
   }
 
   /**
    * Get stats
    */
   async stats(database: string, table?: string): Promise<HTTPResponse<any>> {
-    const params = table 
+    const params = table
       ? `database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`
       : `database=${encodeURIComponent(database)}`;
     return this.get(`/v1/stats?${params}`);

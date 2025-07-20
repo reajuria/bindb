@@ -9,7 +9,10 @@ import { readColumn, type BufferSchema } from './buffer-utils.js';
 import { ID_FIELD } from './constants.js';
 import { SlotManager, type SlotData, type SlotStats } from './slot-manager.js';
 import { TableStorageManager } from './table-storage-manager.js';
-import { TableCacheManager, type TableCacheStats } from './table-cache-manager.js';
+import {
+  TableCacheManager,
+  type TableCacheStats,
+} from './table-cache-manager.js';
 import { TableMetrics, type ComprehensiveStats } from './table-metrics.js';
 import type { Schema } from './schema.js';
 
@@ -36,7 +39,7 @@ interface Database {
 export class Table {
   public readonly database: Database;
   public readonly name: string;
-  
+
   private slotManager: SlotManager;
   private storageManager: TableStorageManager;
   private cacheManager: TableCacheManager;
@@ -48,17 +51,21 @@ export class Table {
 
     // Initialize specialized managers
     this.slotManager = new SlotManager();
-    this.storageManager = new TableStorageManager(storageBasePath, database.name, name);
+    this.storageManager = new TableStorageManager(
+      storageBasePath,
+      database.name,
+      name
+    );
     this.metrics = new TableMetrics();
-    
+
     // Initialize cache manager with write callback
     this.cacheManager = new TableCacheManager({
       readCacheSize: 1000,
       maxBufferSize: 50 * 1024 * 1024, // 50MB
-      maxBufferRecords: 10000,         // 10k records
-      writeFlushCallback: async (writes) => {
+      maxBufferRecords: 10000, // 10k records
+      writeFlushCallback: async writes => {
         await this.storageManager.writeData(writes);
-      }
+      },
     });
   }
 
@@ -84,14 +91,14 @@ export class Table {
     const stat = await this.storageManager.getFileStats();
     const size = stat.size;
     const bufferSchema = this.storageManager.getBufferSchema();
-    
+
     let slot = 0;
     const slotData: SlotData[] = [];
-    
+
     for (let pos = 0; pos < size; pos += bufferSchema.size) {
       const flagBuffer = await this.storageManager.readData(1, pos);
       const rowFlag = flagBuffer.readUInt8(0);
-      
+
       if (rowFlag === RowStatus.Deleted) {
         slotData.push({ slot, id: null });
       } else {
@@ -117,12 +124,12 @@ export class Table {
   async get(id: string): Promise<RowData | null> {
     const startTime = performance.now();
     const slot = this.slotManager.getSlot(id);
-    
+
     if (slot === undefined) {
       this.metrics.recordRead(performance.now() - startTime, false);
       return null;
     }
-    
+
     // Check cache first
     const cacheHit = this.cacheManager.checkCache(id, slot + 1);
     if (cacheHit) {
@@ -140,20 +147,20 @@ export class Table {
         }
       }
     }
-    
+
     // Read from disk
     const bufferSchema = this.storageManager.getBufferSchema();
     const buffer = await this.storageManager.readData(
       bufferSchema.size,
       this.storageManager.getOffset(slot + 1)
     );
-    
+
     const data = parseDataRow(bufferSchema, buffer);
     if (data) {
       this.cacheManager.setInReadCache(id, data);
     }
     this.metrics.recordRead(performance.now() - startTime, false);
-    
+
     return data;
   }
 
@@ -163,22 +170,23 @@ export class Table {
   async insert(row: RowData): Promise<RowData> {
     const startTime = performance.now();
     const bufferSchema = this.storageManager.getBufferSchema();
-    const { buffer, generatedValues }: SerializationResult = dataRowToBufferWithGenerated(bufferSchema, row);
-    
+    const { buffer, generatedValues }: SerializationResult =
+      dataRowToBufferWithGenerated(bufferSchema, row);
+
     // Merge input with generated values (efficient - no parsing!)
     const resultData: RowData = { ...row, ...generatedValues };
     const id = resultData[ID_FIELD] as string;
-    
+
     // Allocate slot
     const slot = this.slotManager.allocateSlot(id);
-    
+
     // Add to write buffer (auto-flush handled internally)
     await this.cacheManager.addToWriteBuffer(
-      slot + 1, 
-      buffer, 
+      slot + 1,
+      buffer,
       this.storageManager.getOffset(slot + 1)
     );
-    
+
     this.metrics.recordWrite(performance.now() - startTime);
     return resultData;
   }
@@ -195,29 +203,30 @@ export class Table {
     const bufferSchema = this.storageManager.getBufferSchema();
     const results: RowData[] = [];
     const writeOperations: BulkWriteOperation[] = [];
-    
+
     // Phase 1: Prepare all data and allocate slots
     for (let i = 0; i < rows.length; i++) {
-      const { buffer, generatedValues }: SerializationResult = dataRowToBufferWithGenerated(bufferSchema, rows[i]);
+      const { buffer, generatedValues }: SerializationResult =
+        dataRowToBufferWithGenerated(bufferSchema, rows[i]);
       const resultData: RowData = { ...rows[i], ...generatedValues };
       const id = resultData[ID_FIELD] as string;
-      
+
       // Allocate slot
       const slot = this.slotManager.allocateSlot(id);
-      
+
       results.push(resultData);
       writeOperations.push({
         slot: slot + 1,
         buffer,
-        position: this.storageManager.getOffset(slot + 1)
+        position: this.storageManager.getOffset(slot + 1),
       });
     }
 
     // Phase 2: Batch add all operations to write buffer
-    const promises = writeOperations.map(op => 
+    const promises = writeOperations.map(op =>
       this.cacheManager.addToWriteBuffer(op.slot, op.buffer, op.position)
     );
-    
+
     await Promise.all(promises);
     this.metrics.recordWrite(performance.now() - startTime);
 
@@ -230,37 +239,40 @@ export class Table {
   async update(id: string, updates: Partial<RowData>): Promise<RowData | null> {
     const startTime = performance.now();
     const slot = this.slotManager.getSlot(id);
-    
+
     if (slot === undefined) {
       this.metrics.recordUpdate(performance.now() - startTime);
       return null;
     }
-    
+
     // Get current record
     const current = await this.get(id);
     if (!current) {
       this.metrics.recordUpdate(performance.now() - startTime);
       return null;
     }
-    
+
     // Merge updates with current data
     const updated: RowData = { ...current, ...updates };
     updated[ID_FIELD] = id; // Preserve the original ID
-    
+
     // Create new buffer with updated data
     const bufferSchema = this.storageManager.getBufferSchema();
-    const { buffer }: SerializationResult = dataRowToBufferWithGenerated(bufferSchema, updated);
-    
+    const { buffer }: SerializationResult = dataRowToBufferWithGenerated(
+      bufferSchema,
+      updated
+    );
+
     // Invalidate cache
     this.cacheManager.invalidateRecord(id);
-    
+
     // Update via write buffer
     await this.cacheManager.addToWriteBuffer(
-      slot + 1, 
-      buffer, 
+      slot + 1,
+      buffer,
       this.storageManager.getOffset(slot + 1)
     );
-    
+
     this.metrics.recordUpdate(performance.now() - startTime);
     return updated;
   }
@@ -271,30 +283,30 @@ export class Table {
   async delete(id: string): Promise<boolean> {
     const startTime = performance.now();
     const slot = this.slotManager.getSlot(id);
-    
+
     if (slot === undefined) {
       this.metrics.recordDelete(performance.now() - startTime);
       return false;
     }
-    
+
     // Create a buffer with deleted row status
     const bufferSchema = this.storageManager.getBufferSchema();
     const buffer = Buffer.alloc(bufferSchema.size);
     buffer.writeUInt8(RowStatus.Deleted, 0);
-    
+
     // Deallocate slot
     this.slotManager.deallocateSlot(id);
-    
+
     // Invalidate cache
     this.cacheManager.invalidateRecord(id);
-    
+
     // Write deletion marker to disk
     await this.cacheManager.addToWriteBuffer(
-      slot + 1, 
-      buffer, 
+      slot + 1,
+      buffer,
       this.storageManager.getOffset(slot + 1)
     );
-    
+
     this.metrics.recordDelete(performance.now() - startTime);
     return true;
   }
@@ -312,10 +324,10 @@ export class Table {
   async close(): Promise<void> {
     // Ensure all data is written before closing
     await this.flush();
-    
+
     // Close storage manager
     await this.storageManager.close();
-    
+
     // Clear caches
     this.cacheManager.clearAll();
   }
@@ -364,14 +376,14 @@ export class Table {
   async getAll(): Promise<RowData[]> {
     const results: RowData[] = [];
     const activeIds = this.slotManager.getActiveIds();
-    
+
     for (const id of activeIds) {
       const record = await this.get(id);
       if (record) {
         results.push(record);
       }
     }
-    
+
     return results;
   }
 

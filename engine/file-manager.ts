@@ -47,12 +47,7 @@ export class FileManager {
    */
   async read(size: number, position: number): Promise<Buffer> {
     const handle = await this.getReadHandle();
-    const { buffer } = await handle.read(
-      Buffer.alloc(size),
-      0,
-      size,
-      position
-    );
+    const { buffer } = await handle.read(Buffer.alloc(size), 0, size, position);
     return buffer;
   }
 
@@ -72,18 +67,18 @@ export class FileManager {
     if (writes.length === 0) return;
 
     const handle = await this.getWriteHandle();
-    
+
     // Sort by position for better disk performance
     const sortedWrites = writes.sort((a, b) => a.position - b.position);
-    
+
     // Group consecutive writes
     const groups: WriteOperation[][] = [];
     let currentGroup = [sortedWrites[0]];
-    
+
     for (let i = 1; i < sortedWrites.length; i++) {
       const current = sortedWrites[i];
       const previous = currentGroup[currentGroup.length - 1];
-      
+
       // If writes are consecutive, group them
       if (current.position === previous.position + previous.buffer.length) {
         currentGroup.push(current);
@@ -93,23 +88,31 @@ export class FileManager {
       }
     }
     groups.push(currentGroup);
-    
+
     // Write each group as a single operation
     for (const group of groups) {
       if (group.length === 1) {
         // Single write
-        await handle.write(group[0].buffer, 0, group[0].buffer.length, group[0].position);
+        await handle.write(
+          group[0].buffer,
+          0,
+          group[0].buffer.length,
+          group[0].position
+        );
       } else {
         // Concatenate buffers for single write
-        const totalLength = group.reduce((sum, write) => sum + write.buffer.length, 0);
+        const totalLength = group.reduce(
+          (sum, write) => sum + write.buffer.length,
+          0
+        );
         const combinedBuffer = Buffer.allocUnsafe(totalLength);
         let offset = 0;
-        
+
         for (const write of group) {
           write.buffer.copy(combinedBuffer, offset);
           offset += write.buffer.length;
         }
-        
+
         await handle.write(combinedBuffer, 0, totalLength, group[0].position);
       }
     }
@@ -128,17 +131,17 @@ export class FileManager {
    */
   async close(): Promise<void> {
     const promises: Promise<void>[] = [];
-    
+
     if (this.readHandle) {
       promises.push(this.readHandle.close());
       this.readHandle = null;
     }
-    
+
     if (this.writeHandle) {
       promises.push(this.writeHandle.close());
       this.writeHandle = null;
     }
-    
+
     await Promise.all(promises);
   }
 

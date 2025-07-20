@@ -6,7 +6,10 @@ import type { ParsedRequest, RouteParams } from './types.js';
  * Request parsing error
  */
 export class RequestParseError extends Error {
-  constructor(message: string, public statusCode: number = 400) {
+  constructor(
+    message: string,
+    public _statusCode: number = 400
+  ) {
     super(message);
     this.name = 'RequestParseError';
   }
@@ -16,11 +19,14 @@ export class RequestParseError extends Error {
  * RequestParser - Handles HTTP request parsing and body extraction
  */
 export class RequestParser {
-  
   /**
    * Parse incoming HTTP request into structured format
    */
-  async parseRequest(req: IncomingMessage, url: URL, params: RouteParams = {}): Promise<ParsedRequest> {
+  async parseRequest(
+    req: IncomingMessage,
+    url: URL,
+    params: RouteParams = {}
+  ): Promise<ParsedRequest> {
     const reqLocals: ParsedRequest = {
       method: req.method as any,
       url,
@@ -48,11 +54,11 @@ export class RequestParser {
   async parseBody(req: IncomingMessage): Promise<any> {
     return new Promise((resolve, reject) => {
       let body = '';
-      
-      req.on('data', (chunk) => {
+
+      req.on('data', chunk => {
         body += chunk.toString();
       });
-      
+
       req.on('end', () => {
         try {
           if (body.trim() === '') {
@@ -62,10 +68,14 @@ export class RequestParser {
             resolve(parsed);
           }
         } catch (error) {
-          reject(new Error(`Invalid JSON in request body: ${(error as Error).message}`));
+          reject(
+            new Error(
+              `Invalid JSON in request body: ${(error as Error).message}`
+            )
+          );
         }
       });
-      
+
       req.on('error', reject);
     });
   }
@@ -82,7 +92,7 @@ export class RequestParser {
    * Get origin from request headers
    */
   getOrigin(req: IncomingMessage): string | undefined {
-    return req.headers.origin as string || req.headers.referer as string;
+    return (req.headers.origin as string) || (req.headers.referer as string);
   }
 
   /**
@@ -96,7 +106,10 @@ export class RequestParser {
   /**
    * Validate content type
    */
-  validateContentType(req: IncomingMessage, expectedType: string = 'application/json'): boolean {
+  validateContentType(
+    req: IncomingMessage,
+    expectedType: string = 'application/json'
+  ): boolean {
     const contentType = req.headers['content-type'];
     return contentType ? contentType.includes(expectedType) : false;
   }

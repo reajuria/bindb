@@ -11,7 +11,10 @@ export class CORSHandler {
     this.config = {
       origin: options.origin || '*',
       methods: options.methods || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-      allowedHeaders: options.allowedHeaders || ['Content-Type', 'Authorization'],
+      allowedHeaders: options.allowedHeaders || [
+        'Content-Type',
+        'Authorization',
+      ],
       exposedHeaders: options.exposedHeaders || [],
       credentials: options.credentials || false,
       maxAge: options.maxAge || 86400, // 24 hours
@@ -22,19 +25,23 @@ export class CORSHandler {
    * Check if request is a CORS preflight request
    */
   isPreflightRequest(method: string, headers: IncomingHttpHeaders): boolean {
-    return method === 'OPTIONS' && 
-           !!(headers['access-control-request-method'] || 
-              headers['Access-Control-Request-Method']);
+    return (
+      method === 'OPTIONS' &&
+      !!(
+        headers['access-control-request-method'] ||
+        headers['Access-Control-Request-Method']
+      )
+    );
   }
 
   /**
    * Get origin from request headers
    */
   getOrigin(headers: IncomingHttpHeaders): string {
-    return (headers['origin'] || 
-           headers['Origin'] || 
-           headers['sec-fetch-site'] || 
-           '*') as string;
+    return (headers['origin'] ||
+      headers['Origin'] ||
+      headers['sec-fetch-site'] ||
+      '*') as string;
   }
 
   /**
@@ -59,7 +66,10 @@ export class CORSHandler {
   /**
    * Create preflight response
    */
-  createPreflightResponse(origin?: string, _headers: IncomingHttpHeaders = {}): HttpResponse {
+  createPreflightResponse(
+    origin?: string,
+    _headers: IncomingHttpHeaders = {}
+  ): HttpResponse {
     const responseHeaders: Record<string, string> = {};
 
     // Set allowed origin
@@ -70,13 +80,13 @@ export class CORSHandler {
     }
 
     // Set allowed methods
-    const methods = Array.isArray(this.config.methods) 
+    const methods = Array.isArray(this.config.methods)
       ? this.config.methods.join(', ')
       : this.config.methods;
     responseHeaders['Access-Control-Allow-Methods'] = methods;
 
     // Set allowed headers
-    const allowedHeaders = Array.isArray(this.config.allowedHeaders) 
+    const allowedHeaders = Array.isArray(this.config.allowedHeaders)
       ? this.config.allowedHeaders.join(', ')
       : this.config.allowedHeaders;
     responseHeaders['Access-Control-Allow-Headers'] = allowedHeaders;
@@ -92,7 +102,7 @@ export class CORSHandler {
     return {
       statusCode: 204,
       headers: responseHeaders,
-      body: undefined
+      body: undefined,
     };
   }
 
@@ -111,7 +121,7 @@ export class CORSHandler {
 
     // Set exposed headers
     if (this.config.exposedHeaders && this.config.exposedHeaders.length > 0) {
-      const exposedHeaders = Array.isArray(this.config.exposedHeaders) 
+      const exposedHeaders = Array.isArray(this.config.exposedHeaders)
         ? this.config.exposedHeaders.join(', ')
         : this.config.exposedHeaders;
       headers['Access-Control-Expose-Headers'] = exposedHeaders;
@@ -124,7 +134,7 @@ export class CORSHandler {
 
     return {
       ...response,
-      headers
+      headers,
     };
   }
 
@@ -134,7 +144,7 @@ export class CORSHandler {
   updateConfig(newConfig: CORSConfig): void {
     this.config = {
       ...this.config,
-      ...newConfig
+      ...newConfig,
     };
   }
 

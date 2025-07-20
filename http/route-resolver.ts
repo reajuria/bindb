@@ -1,4 +1,10 @@
-import type { RouteHandler, RouteMatch, Route, RouteStats, HttpMethod } from './types.js';
+import type {
+  RouteHandler,
+  RouteMatch,
+  Route,
+  RouteStats,
+  HttpMethod,
+} from './types.js';
 
 /**
  * RouteResolver - Handles route matching and parameter extraction
@@ -23,7 +29,7 @@ export class RouteResolver {
     // First try exact match
     const exactKey = `${method.toUpperCase()}:${pathname}`;
     const exactHandler = this.handlers.get(exactKey);
-    
+
     if (exactHandler) {
       return {
         handler: exactHandler,
@@ -34,10 +40,10 @@ export class RouteResolver {
     // Try pattern matching for parameterized routes
     for (const [key, handler] of this.handlers.entries()) {
       const [routeMethod, routePath] = this.parseRouteKey(key);
-      
+
       if (method.toUpperCase() === routeMethod) {
         const { match, params } = this.matchRoute(pathname, routePath);
-        
+
         if (match) {
           return {
             handler,
@@ -68,7 +74,10 @@ export class RouteResolver {
   /**
    * Match a URL path against a route pattern
    */
-  private matchRoute(urlPath: string, routePath: string): { match: boolean; params: Record<string, string> } {
+  private matchRoute(
+    urlPath: string,
+    routePath: string
+  ): { match: boolean; params: Record<string, string> } {
     const urlSegments = urlPath.split('/');
     const routeSegments = routePath.split('/');
     const params: Record<string, string> = {};
@@ -118,7 +127,7 @@ export class RouteResolver {
    */
   getRoutes(): Route[] {
     const routes: Route[] = [];
-    
+
     for (const [key, handler] of this.handlers.entries()) {
       const [method, path] = this.parseRouteKey(key);
       routes.push({

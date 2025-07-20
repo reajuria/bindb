@@ -4,7 +4,6 @@ import type { HttpResponse } from './types.js';
  * ResponseFormatter - Handles HTTP response formatting and serialization
  */
 export class ResponseFormatter {
-  
   /**
    * Format handler result into HTTP response structure
    */
@@ -32,9 +31,9 @@ export class ResponseFormatter {
     return {
       body: undefined,
       headers: {
-        'Content-Length': '0'
+        'Content-Length': '0',
       },
-      statusCode: 200
+      statusCode: 200,
     };
   }
 
@@ -46,9 +45,9 @@ export class ResponseFormatter {
       body: content,
       headers: {
         'Content-Type': 'text/plain',
-        'Content-Length': Buffer.byteLength(content, 'utf8').toString()
+        'Content-Length': Buffer.byteLength(content, 'utf8').toString(),
       },
-      statusCode: 200
+      statusCode: 200,
     };
   }
 
@@ -57,14 +56,14 @@ export class ResponseFormatter {
    */
   createJsonResponse(data: any, _origin: string = '*'): HttpResponse {
     const body = JSON.stringify(data, null, 2);
-    
+
     return {
       body,
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body, 'utf8').toString()
+        'Content-Length': Buffer.byteLength(body, 'utf8').toString(),
       },
-      statusCode: 200
+      statusCode: 200,
     };
   }
 
@@ -73,14 +72,14 @@ export class ResponseFormatter {
    */
   createErrorResponse(message: string, statusCode: number = 500): HttpResponse {
     const errorBody = JSON.stringify({ error: message });
-    
+
     return {
       body: errorBody,
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(errorBody, 'utf8').toString()
+        'Content-Length': Buffer.byteLength(errorBody, 'utf8').toString(),
       },
-      statusCode
+      statusCode,
     };
   }
 
@@ -112,7 +111,7 @@ export class ResponseFormatter {
     if (data === undefined) {
       return this.createEmptyResponse();
     }
-    
+
     return this.createJsonResponse(data);
   }
 
@@ -120,7 +119,9 @@ export class ResponseFormatter {
    * Create created response
    */
   createCreatedResponse(data?: any): HttpResponse {
-    const response = data ? this.createJsonResponse(data) : this.createEmptyResponse();
+    const response = data
+      ? this.createJsonResponse(data)
+      : this.createEmptyResponse();
     response.statusCode = 201;
     return response;
   }
@@ -132,7 +133,7 @@ export class ResponseFormatter {
     return {
       body: undefined,
       headers: {},
-      statusCode: 204
+      statusCode: 204,
     };
   }
 }

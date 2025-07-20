@@ -20,7 +20,11 @@ export class Schema {
   /**
    * Create a new schema
    */
-  static create(database: string, table: string, columns: ColumnDefinition[]): Schema {
+  static create(
+    database: string,
+    table: string,
+    columns: ColumnDefinition[]
+  ): Schema {
     const schema = new Schema();
     schema._database = database;
     schema._table = table;
@@ -67,7 +71,7 @@ export class Schema {
     if (Types[type] === undefined) {
       throw new Error(`Invalid type ${type}`);
     }
-    if (this._columns.find((col) => col.name === name) !== undefined) {
+    if (this._columns.find(col => col.name === name) !== undefined) {
       throw new Error(`Column ${name} already exists`);
     }
 

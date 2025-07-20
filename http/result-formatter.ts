@@ -243,17 +243,20 @@ export class ResultFormatter {
       includeTiming: options.includeTiming !== false,
       includeStats: options.includeStats !== false,
       dateFormat: options.dateFormat || 'iso',
-      ...options
+      ...options,
     } as Required<FormattingConfig>;
   }
 
   /**
    * Format insert operation result
    */
-  formatInsertResult(result: RowData, metadata: OperationMetadata = {}): InsertResponse {
+  formatInsertResult(
+    result: RowData,
+    metadata: OperationMetadata = {}
+  ): InsertResponse {
     const response: InsertResponse = {
       insertedId: result.id as string,
-      record: this.formatRecord(result)
+      record: this.formatRecord(result),
     };
 
     if (this.config.includeMetadata) {
@@ -261,7 +264,7 @@ export class ResultFormatter {
         operation: 'insert',
         table: metadata.table,
         database: metadata.database,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -271,13 +274,16 @@ export class ResultFormatter {
   /**
    * Format bulk insert operation result
    */
-  formatBulkInsertResult(results: RowData[], metadata: OperationMetadata = {}): BulkInsertResponse {
+  formatBulkInsertResult(
+    results: RowData[],
+    metadata: OperationMetadata = {}
+  ): BulkInsertResponse {
     const insertedIds = results.map(record => record.id as string);
-    
+
     const response: BulkInsertResponse = {
       insertedCount: results.length,
       insertedIds,
-      records: results.map(record => this.formatRecord(record))
+      records: results.map(record => this.formatRecord(record)),
     };
 
     if (this.config.includeMetadata) {
@@ -286,7 +292,7 @@ export class ResultFormatter {
         table: metadata.table,
         database: metadata.database,
         batchInfo: metadata.batchInfo,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -296,10 +302,13 @@ export class ResultFormatter {
   /**
    * Format get operation result
    */
-  formatGetResult(result: RowData | null, metadata: OperationMetadata = {}): GetResponse {
+  formatGetResult(
+    result: RowData | null,
+    metadata: OperationMetadata = {}
+  ): GetResponse {
     const response: GetResponse = {
       record: result ? this.formatRecord(result) : null,
-      found: !!result
+      found: !!result,
     };
 
     if (this.config.includeMetadata) {
@@ -308,7 +317,7 @@ export class ResultFormatter {
         table: metadata.table,
         database: metadata.database,
         id: metadata.id,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -318,11 +327,14 @@ export class ResultFormatter {
   /**
    * Format update operation result
    */
-  formatUpdateResult(result: UpdateResultData, metadata: OperationMetadata = {}): UpdateResponse {
+  formatUpdateResult(
+    result: UpdateResultData,
+    metadata: OperationMetadata = {}
+  ): UpdateResponse {
     const response: UpdateResponse = {
       matchedCount: result.matchedCount || 0,
       modifiedCount: result.modifiedCount || 0,
-      record: result.record ? this.formatRecord(result.record) : null
+      record: result.record ? this.formatRecord(result.record) : null,
     };
 
     if (this.config.includeMetadata) {
@@ -332,7 +344,7 @@ export class ResultFormatter {
         database: metadata.database,
         id: metadata.id,
         fieldsUpdated: metadata.fieldsUpdated,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -342,10 +354,13 @@ export class ResultFormatter {
   /**
    * Format delete operation result
    */
-  formatDeleteResult(result: DeleteResultData, metadata: OperationMetadata = {}): DeleteResponse {
+  formatDeleteResult(
+    result: DeleteResultData,
+    metadata: OperationMetadata = {}
+  ): DeleteResponse {
     const response: DeleteResponse = {
       deletedCount: result.deletedCount || 0,
-      acknowledged: true
+      acknowledged: true,
     };
 
     if (this.config.includeMetadata) {
@@ -354,7 +369,7 @@ export class ResultFormatter {
         table: metadata.table,
         database: metadata.database,
         id: metadata.id,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -364,9 +379,12 @@ export class ResultFormatter {
   /**
    * Format count operation result
    */
-  formatCountResult(count: number, metadata: OperationMetadata = {}): CountResponse {
+  formatCountResult(
+    count: number,
+    metadata: OperationMetadata = {}
+  ): CountResponse {
     const response: CountResponse = {
-      count: count || 0
+      count: count || 0,
     };
 
     if (this.config.includeMetadata) {
@@ -374,7 +392,7 @@ export class ResultFormatter {
         operation: 'count',
         table: metadata.table,
         database: metadata.database,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -384,21 +402,24 @@ export class ResultFormatter {
   /**
    * Format table creation result
    */
-  formatCreateTableResult(result: CreateTableResultData, metadata: OperationMetadata = {}): CreateTableResponse {
+  formatCreateTableResult(
+    result: CreateTableResultData,
+    metadata: OperationMetadata = {}
+  ): CreateTableResponse {
     const response: CreateTableResponse = {
       table: {
         database: result.database,
         table: result.table,
-        schema: result.schema
+        schema: result.schema,
       },
-      created: true
+      created: true,
     };
 
     if (this.config.includeMetadata) {
       response.metadata = {
         operation: 'createTable',
         columnsCount: result.schema?.length || 0,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       };
     }
 
@@ -449,11 +470,11 @@ export class ResultFormatter {
     }
 
     const timing: { duration?: number; timestamp: string | number } = {
-      timestamp: metadata.timestamp 
+      timestamp: metadata.timestamp
         ? this.formatDate(new Date(metadata.timestamp))
-        : this.formatDate(new Date())
+        : this.formatDate(new Date()),
     };
-    
+
     if (metadata.startTime && metadata.endTime) {
       timing.duration = metadata.endTime - metadata.startTime;
     }
@@ -467,7 +488,7 @@ export class ResultFormatter {
   formatError(error: Error, metadata: OperationMetadata = {}): ErrorResponse {
     const response: ErrorResponse = {
       error: error.message || 'Unknown error',
-      success: false
+      success: false,
     };
 
     if ('code' in error && error.code) {
@@ -478,7 +499,7 @@ export class ResultFormatter {
       response.metadata = {
         operation: metadata.operation || 'unknown',
         errorType: error.name || 'Error',
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       };
     }
 
@@ -494,8 +515,8 @@ export class ResultFormatter {
    * Format pagination result
    */
   formatPaginationResult(
-    records: RowData[], 
-    pagination: PaginationData, 
+    records: RowData[],
+    pagination: PaginationData,
     metadata: OperationMetadata = {}
   ): PaginationResponse {
     const response: PaginationResponse = {
@@ -506,8 +527,8 @@ export class ResultFormatter {
         total: pagination.total || 0,
         pages: Math.ceil((pagination.total || 0) / (pagination.limit || 10)),
         hasNext: pagination.hasNext || false,
-        hasPrev: pagination.hasPrev || false
-      }
+        hasPrev: pagination.hasPrev || false,
+      },
     };
 
     if (this.config.includeMetadata) {
@@ -516,7 +537,7 @@ export class ResultFormatter {
         table: metadata.table,
         database: metadata.database,
         recordsInPage: records.length,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       } as any;
     }
 
@@ -533,7 +554,7 @@ export class ResultFormatter {
       version: healthData.version,
       uptime: healthData.uptime,
       databases: healthData.databases || {},
-      performance: healthData.performance || {}
+      performance: healthData.performance || {},
     } as any;
   }
 
@@ -547,7 +568,7 @@ export class ResultFormatter {
       description: apiInfo.description || 'Binary database engine HTTP API',
       endpoints: apiInfo.endpoints || [],
       features: apiInfo.features || [],
-      documentation: apiInfo.documentation || null
+      documentation: apiInfo.documentation || null,
     };
   }
 
@@ -557,7 +578,7 @@ export class ResultFormatter {
   updateConfig(newConfig: Partial<FormattingConfig>): void {
     this.config = {
       ...this.config,
-      ...newConfig
+      ...newConfig,
     } as Required<FormattingConfig>;
   }
 
@@ -571,16 +592,19 @@ export class ResultFormatter {
   /**
    * Create a standardized response wrapper
    */
-  wrapResponse<T = any>(data: T, metadata: OperationMetadata = {}): StandardResponse<T> {
+  wrapResponse<T = any>(
+    data: T,
+    metadata: OperationMetadata = {}
+  ): StandardResponse<T> {
     const response: StandardResponse<T> = {
       success: true,
-      data
+      data,
     };
 
     if (this.config.includeMetadata && Object.keys(metadata).length > 0) {
       response.metadata = {
         ...metadata,
-        ...this.getTimingInfo(metadata)
+        ...this.getTimingInfo(metadata),
       };
     }
 
@@ -591,16 +615,16 @@ export class ResultFormatter {
    * Format validation error
    */
   formatValidationError(
-    message: string, 
-    field?: string, 
-    value?: any, 
+    message: string,
+    field?: string,
+    value?: any,
     metadata: OperationMetadata = {}
   ): ErrorResponse {
     const error = new Error(message);
     error.name = 'ValidationError';
     (error as any).field = field;
     (error as any).value = value;
-    
+
     return this.formatError(error, metadata);
   }
 
@@ -608,17 +632,17 @@ export class ResultFormatter {
    * Format not found error
    */
   formatNotFoundError(
-    resource: string, 
-    id?: string, 
+    resource: string,
+    id?: string,
     metadata: OperationMetadata = {}
   ): ErrorResponse {
-    const message = id 
+    const message = id
       ? `${resource} with id '${id}' not found`
       : `${resource} not found`;
-    
+
     const error = new Error(message);
     error.name = 'NotFoundError';
-    
+
     return this.formatError(error, metadata);
   }
 
@@ -632,7 +656,9 @@ export class ResultFormatter {
   /**
    * Extract timing from response metadata
    */
-  extractTiming(response: BaseResponse): { duration?: number; timestamp?: string | number } | null {
+  extractTiming(
+    response: BaseResponse
+  ): { duration?: number; timestamp?: string | number } | null {
     return response.metadata?.timing || null;
   }
 }

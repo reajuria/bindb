@@ -30,11 +30,11 @@ export class LRUCache<K extends string | number, V> {
     }
 
     const value = this.cache.get(key)!;
-    
+
     // Move to end for LRU behavior (most recently used)
     this.cache.delete(key);
     this.cache.set(key, value);
-    
+
     return value;
   }
 
@@ -97,7 +97,7 @@ export class LRUCache<K extends string | number, V> {
     return {
       size: this.cache.size,
       maxSize: this.maxSize,
-      utilization: (this.cache.size / this.maxSize * 100).toFixed(1) + '%'
+      utilization: ((this.cache.size / this.maxSize) * 100).toFixed(1) + '%',
     };
   }
 }

@@ -3,14 +3,14 @@
  */
 
 // Re-export specialized components for backward compatibility
-export { 
+export {
   calculateBufferSchema as parseBufferSchema,
   DEFAULT_TEXT_LENGTH,
   validateBufferSchema,
   getBufferSchemaStats,
   type BufferSchemaStats,
   type SchemaValidation,
-  type ColumnSizeInfo
+  type ColumnSizeInfo,
 } from './buffer-schema-calculator.js';
 
 export {
@@ -19,7 +19,7 @@ export {
   type BufferSchema,
   type BufferSchemaColumn,
   type Coordinates,
-  type ColumnValue
+  type ColumnValue,
 } from './buffer-utils.js';
 
 export {
@@ -35,7 +35,7 @@ export {
   type IdFieldValidation,
   type IdFieldRequirements,
   type IdFieldConfig,
-  type IdFieldConfigOptions
+  type IdFieldConfigOptions,
 } from './id-field-manager.js';
 
 export {
@@ -52,5 +52,5 @@ export {
   type RowData,
   type SerializationResult,
   type RowValidation,
-  type SerializationStats
+  type SerializationStats,
 } from './row-serializer.js';

@@ -1,15 +1,20 @@
-import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
+import {
+  createServer,
+  type Server,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http';
 import { RequestParser } from './request-parser.js';
 import { RouteResolver } from './route-resolver.js';
 import { ResponseFormatter } from './response-formatter.js';
 import { CORSHandler } from './cors-handler.js';
-import type { 
-  AppOptions, 
-  AppStats, 
-  RouteHandler, 
+import type {
+  AppOptions,
+  AppStats,
+  RouteHandler,
   HttpResponse,
   CORSConfig,
-  Route
+  Route,
 } from './types.js';
 
 /**
@@ -28,7 +33,7 @@ export class App {
     this.routeResolver = new RouteResolver();
     this.responseFormatter = new ResponseFormatter();
     this.corsHandler = new CORSHandler(options.cors || {});
-    
+
     this.server = this._createServer();
   }
 
@@ -42,8 +47,8 @@ export class App {
     server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
       try {
         await this._handleRequest(req, res);
-      } catch (error) {
-        this._handleError(error as Error, res);
+      } catch (_error) {
+        this._handleError(_error as Error, res);
       }
     });
 
@@ -54,23 +59,38 @@ export class App {
    * Handle incoming HTTP request
    * @private
    */
-  private async _handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  private async _handleRequest(
+    req: IncomingMessage,
+    res: ServerResponse
+  ): Promise<void> {
     const url = new URL(req.url!, `http://${req.headers.host}`);
     const origin = this.requestParser.getOrigin(req);
 
     // Handle CORS preflight requests
     if (this.corsHandler.isPreflightRequest(req.method!, req.headers)) {
-      const preflightResponse = this.corsHandler.createPreflightResponse(origin, req.headers);
+      const preflightResponse = this.corsHandler.createPreflightResponse(
+        origin,
+        req.headers
+      );
       return this._sendResponse(res, preflightResponse);
     }
 
     // Resolve route
-    const routeMatch = this.routeResolver.resolveRoute(req.method!, url.pathname);
-    
+    const routeMatch = this.routeResolver.resolveRoute(
+      req.method!,
+      url.pathname
+    );
+
     if (!routeMatch) {
       // Check if path exists for OPTIONS handling
-      if (req.method === 'OPTIONS' && this.routeResolver.hasPath(url.pathname)) {
-        const optionsResponse = this.corsHandler.createPreflightResponse(origin, req.headers);
+      if (
+        req.method === 'OPTIONS' &&
+        this.routeResolver.hasPath(url.pathname)
+      ) {
+        const optionsResponse = this.corsHandler.createPreflightResponse(
+          origin,
+          req.headers
+        );
         return this._sendResponse(res, optionsResponse);
       }
 
@@ -79,36 +99,42 @@ export class App {
     }
 
     // Parse request
-    const parsedRequest = await this.requestParser.parseRequest(req, url, routeMatch.params);
-    
+    const parsedRequest = await this.requestParser.parseRequest(
+      req,
+      url,
+      routeMatch.params
+    );
+
     // Call route handler
     const handlerResult = await routeMatch.handler(parsedRequest);
-    
+
     // Format response
     let response = this.responseFormatter.formatResponse(handlerResult, origin);
-    
+
     // Add CORS headers
     response = this.corsHandler.addCORSHeaders(response, origin);
-    
+
     // Send response
     this._sendResponse(res, response);
   }
 
   /**
-   * Handle request processing errors
+   * Handle request processing _errors
    * @private
    */
-  private _handleError(error: Error, res: ServerResponse): void {
-    let errorResponse: HttpResponse;
+  private _handleError(_error: Error, res: ServerResponse): void {
+    let _errorResponse: HttpResponse;
 
-    if (error.name === 'RequestParseError') {
-      errorResponse = this.responseFormatter.createBadRequestResponse(error.message);
+    if (_error.name === 'RequestParseError') {
+      _errorResponse = this.responseFormatter.createBadRequestResponse(
+        _error.message
+      );
     } else {
-      console.error(`Error occurred: ${error.message}`);
-      errorResponse = this.responseFormatter.createInternalErrorResponse();
+      console.error(`Error occurred: ${_error.message}`);
+      _errorResponse = this.responseFormatter.createInternalErrorResponse();
     }
 
-    this._sendResponse(res, errorResponse);
+    this._sendResponse(res, _errorResponse);
   }
 
   /**
@@ -118,7 +144,7 @@ export class App {
   private _sendResponse(res: ServerResponse, response: HttpResponse): void {
     const statusCode = response.statusCode || 200;
     const headers = response.headers || {};
-    
+
     res.writeHead(statusCode, headers);
     res.end(response.body);
   }
@@ -136,7 +162,7 @@ export class App {
   /**
    * Stop the server
    */
-  close(callback?: (err?: Error) => void): void {
+  close(callback?: (_err?: Error) => void): void {
     if (this.server) {
       this.server.close(callback);
     }
@@ -186,8 +212,8 @@ export class App {
       cors: this.corsHandler.getConfig(),
       server: {
         listening: this.server?.listening || false,
-        address: this.server?.address() || null
-      }
+        address: this.server?.address() || null,
+      },
     };
   }
 

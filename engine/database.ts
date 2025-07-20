@@ -1,5 +1,8 @@
 import { Table } from './table.js';
-import { DatabaseFileManager, type DatabaseMetadata } from './database-file-manager.js';
+import {
+  DatabaseFileManager,
+  type DatabaseMetadata,
+} from './database-file-manager.js';
 import type { Schema } from './schema.js';
 
 /**
@@ -26,7 +29,7 @@ export class Database {
   public readonly name: string;
   public readonly databaseBasePath: string;
   public readonly metadataFilePath: string;
-  
+
   private fileManager: DatabaseFileManager;
   private tables: Map<string, Table> = new Map();
   private metadata: DatabaseMetadataWithTables;
@@ -34,7 +37,10 @@ export class Database {
   /**
    * Create and initialize a new database
    */
-  static async create(storageBasePath: string, name: string): Promise<Database> {
+  static async create(
+    storageBasePath: string,
+    name: string
+  ): Promise<Database> {
     const database = new Database(storageBasePath, name);
     await database.initDatabase();
     return database;
@@ -46,7 +52,7 @@ export class Database {
 
     // Initialize database file manager
     this.fileManager = new DatabaseFileManager(storageBasePath, name);
-    
+
     // Get paths from file manager
     const paths = this.fileManager.getPaths();
     this.databaseBasePath = paths.databaseBasePath;
@@ -70,17 +76,20 @@ export class Database {
    */
   async loadMetadata(): Promise<void> {
     const metadata = await this.fileManager.readMetadata();
-    
+
     this.metadata = {
       ...this.metadata,
       ...metadata,
       tables: [
         ...this.metadata.tables,
-        ...metadata.tables.map((table) => ({
-          name: table.name || '',
-          schema: table.schema || `${table.name}.schema.json`,
-          ...table,
-        } as TableReference)),
+        ...metadata.tables.map(
+          table =>
+            ({
+              name: table.name || '',
+              schema: table.schema || `${table.name}.schema.json`,
+              ...table,
+            }) as TableReference
+        ),
       ],
     };
 
@@ -97,11 +106,11 @@ export class Database {
   async saveMetadata(): Promise<void> {
     const metadataToSave: DatabaseMetadataWithTables = {
       ...this.metadata,
-      tables: this.metadata.tables.map((table) => ({
+      tables: this.metadata.tables.map(table => ({
         ...table,
       })),
     };
-    
+
     await this.fileManager.writeMetadata(metadataToSave);
   }
 
@@ -112,17 +121,17 @@ export class Database {
     if (this.tables.has(name)) {
       return this.tables.get(name)!;
     }
-    
+
     const table = new Table(this.storageBasePath, this, name);
     await table.initTable(schema);
-    
-    if (!this.metadata.tables.find((table) => table.name === name)) {
+
+    if (!this.metadata.tables.find(table => table.name === name)) {
       this.metadata.tables.push({
         name,
         schema: `${name}.schema.json`,
       });
     }
-    
+
     this.tables.set(name, table);
     await this.saveMetadata();
     return table;
@@ -178,19 +187,19 @@ export class Database {
 
     // Close the table first
     await table.close();
-    
+
     // Remove from tables map
     this.tables.delete(name);
-    
+
     // Remove from metadata
     this.metadata.tables = this.metadata.tables.filter(t => t.name !== name);
-    
+
     // Delete table files
     await this.fileManager.deleteTableFiles(name);
-    
+
     // Save updated metadata
     await this.saveMetadata();
-    
+
     return true;
   }
 

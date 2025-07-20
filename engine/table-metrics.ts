@@ -72,14 +72,14 @@ export class TableMetrics {
       updates: 0,
       deletes: 0,
       cacheHits: 0,
-      cacheMisses: 0
+      cacheMisses: 0,
     };
 
     this.performanceTiming = {
       totalReadTime: 0,
       totalWriteTime: 0,
       totalUpdateTime: 0,
-      totalDeleteTime: 0
+      totalDeleteTime: 0,
     };
 
     this.startTime = Date.now();
@@ -91,7 +91,7 @@ export class TableMetrics {
   recordRead(duration: number = 0, fromCache: boolean = false): void {
     this.operationCounts.reads++;
     this.performanceTiming.totalReadTime += duration;
-    
+
     if (fromCache) {
       this.operationCounts.cacheHits++;
     } else {
@@ -134,24 +134,33 @@ export class TableMetrics {
    * Get performance timing statistics
    */
   getPerformanceStats(): PerformanceStats {
-    const totalOps = this.operationCounts.reads + this.operationCounts.writes + 
-                    this.operationCounts.updates + this.operationCounts.deletes;
-    
+    const totalOps =
+      this.operationCounts.reads +
+      this.operationCounts.writes +
+      this.operationCounts.updates +
+      this.operationCounts.deletes;
+
     return {
       ...this.performanceTiming,
-      averageReadTime: this.operationCounts.reads > 0 
-        ? this.performanceTiming.totalReadTime / this.operationCounts.reads 
-        : 0,
-      averageWriteTime: this.operationCounts.writes > 0 
-        ? this.performanceTiming.totalWriteTime / this.operationCounts.writes 
-        : 0,
-      averageUpdateTime: this.operationCounts.updates > 0 
-        ? this.performanceTiming.totalUpdateTime / this.operationCounts.updates 
-        : 0,
-      averageDeleteTime: this.operationCounts.deletes > 0 
-        ? this.performanceTiming.totalDeleteTime / this.operationCounts.deletes 
-        : 0,
-      totalOperations: totalOps
+      averageReadTime:
+        this.operationCounts.reads > 0
+          ? this.performanceTiming.totalReadTime / this.operationCounts.reads
+          : 0,
+      averageWriteTime:
+        this.operationCounts.writes > 0
+          ? this.performanceTiming.totalWriteTime / this.operationCounts.writes
+          : 0,
+      averageUpdateTime:
+        this.operationCounts.updates > 0
+          ? this.performanceTiming.totalUpdateTime /
+            this.operationCounts.updates
+          : 0,
+      averageDeleteTime:
+        this.operationCounts.deletes > 0
+          ? this.performanceTiming.totalDeleteTime /
+            this.operationCounts.deletes
+          : 0,
+      totalOperations: totalOps,
     };
   }
 
@@ -159,18 +168,21 @@ export class TableMetrics {
    * Get cache performance statistics
    */
   getCacheStats(): CacheStats {
-    const totalCacheRequests = this.operationCounts.cacheHits + this.operationCounts.cacheMisses;
-    
+    const totalCacheRequests =
+      this.operationCounts.cacheHits + this.operationCounts.cacheMisses;
+
     return {
       hits: this.operationCounts.cacheHits,
       misses: this.operationCounts.cacheMisses,
       totalRequests: totalCacheRequests,
-      hitRate: totalCacheRequests > 0 
-        ? this.operationCounts.cacheHits / totalCacheRequests 
-        : 0,
-      missRate: totalCacheRequests > 0 
-        ? this.operationCounts.cacheMisses / totalCacheRequests 
-        : 0
+      hitRate:
+        totalCacheRequests > 0
+          ? this.operationCounts.cacheHits / totalCacheRequests
+          : 0,
+      missRate:
+        totalCacheRequests > 0
+          ? this.operationCounts.cacheMisses / totalCacheRequests
+          : 0,
     };
   }
 
@@ -178,33 +190,36 @@ export class TableMetrics {
    * Get comprehensive table statistics
    */
   getComprehensiveStats(
-    slotStats: Record<string, any> = {}, 
+    slotStats: Record<string, any> = {},
     cacheStats: Record<string, any> = {}
   ): ComprehensiveStats {
     const uptime = Date.now() - this.startTime;
-    const totalOps = this.operationCounts.reads + this.operationCounts.writes + 
-                    this.operationCounts.updates + this.operationCounts.deletes;
+    const totalOps =
+      this.operationCounts.reads +
+      this.operationCounts.writes +
+      this.operationCounts.updates +
+      this.operationCounts.deletes;
 
     return {
       // Basic table info
       uptime,
       totalOperations: totalOps,
-      operationsPerSecond: uptime > 0 ? (totalOps / (uptime / 1000)) : 0,
-      
+      operationsPerSecond: uptime > 0 ? totalOps / (uptime / 1000) : 0,
+
       // Operation breakdown
       operations: this.getOperationStats(),
-      
+
       // Performance metrics
       performance: this.getPerformanceStats(),
-      
+
       // Cache performance
       cachePerformance: this.getCacheStats(),
-      
+
       // Slot information (from SlotManager)
       slots: slotStats,
-      
+
       // Cache details (from TableCacheManager)
-      cache: cacheStats
+      cache: cacheStats,
     };
   }
 
@@ -218,14 +233,14 @@ export class TableMetrics {
       updates: 0,
       deletes: 0,
       cacheHits: 0,
-      cacheMisses: 0
+      cacheMisses: 0,
     };
 
     this.performanceTiming = {
       totalReadTime: 0,
       totalWriteTime: 0,
       totalUpdateTime: 0,
-      totalDeleteTime: 0
+      totalDeleteTime: 0,
     };
 
     this.startTime = Date.now();
@@ -260,7 +275,11 @@ Uptime: ${(stats.uptime / 1000).toFixed(2)} seconds`;
    * Get total number of operations recorded
    */
   get totalOperations(): number {
-    return this.operationCounts.reads + this.operationCounts.writes + 
-           this.operationCounts.updates + this.operationCounts.deletes;
+    return (
+      this.operationCounts.reads +
+      this.operationCounts.writes +
+      this.operationCounts.updates +
+      this.operationCounts.deletes
+    );
   }
 }
