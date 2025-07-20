@@ -75,7 +75,7 @@ export class RequestParser {
    */
   shouldParseBody(method?: string): boolean {
     if (!method) return false;
-    return ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
+    return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
   }
 
   /**
