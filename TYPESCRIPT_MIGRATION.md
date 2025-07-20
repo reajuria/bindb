@@ -20,6 +20,13 @@ This document tracks the migration of the BinDB codebase from JavaScript to Type
 - [x] `id-generator.ts` - ID generation utilities with proper types
 - [x] `time-utils.ts` - Time utilities with Timer interface
 - [x] `lru-cache.ts` - Generic LRU cache implementation
+- [x] `buffer-utils.ts` - Buffer operations with typed column handlers
+- [x] `buffer-schema-calculator.ts` - Schema calculations with validation
+- [x] `id-field-manager.ts` - ID field management with comprehensive types
+- [x] `row.ts` - Row data structures and re-exports with type safety
+- [x] `row-serializer.ts` - Row serialization with proper enum and interfaces
+- [x] `file-manager.ts` - High-performance file operations with async types
+- [x] `write-buffer.ts` - Buffered write operations with statistics
 
 #### HTTP Layer (`http/`)
 - [x] `types.ts` - Comprehensive type definitions for HTTP layer
@@ -40,20 +47,13 @@ This document tracks the migration of the BinDB codebase from JavaScript to Type
 ### ❌ Pending Migrations
 
 #### Engine Components
-- [ ] `buffer-schema-calculator.js`
-- [ ] `buffer-utils.js`
-- [ ] `row.js` (re-export file)
-- [ ] `row-serializer.js`
-- [ ] `id-field-manager.js`
 - [ ] `database-file-manager.js`
 - [ ] `database.js`
-- [ ] `file-manager.js`
 - [ ] `slot-manager.js`
 - [ ] `table-cache-manager.js`
 - [ ] `table.js`
 - [ ] `table-metrics.js`
 - [ ] `table-storage-manager.js`
-- [ ] `write-buffer.js`
 
 #### HTTP Components (Full Implementation)
 - [ ] `database-manager.js`
@@ -120,7 +120,7 @@ This document tracks the migration of the BinDB codebase from JavaScript to Type
 
 ## Status Summary
 - **Total Files**: ~45 JavaScript files identified
-- **Migrated**: ~11 core files (25% complete)
+- **Migrated**: ~19 core files (42% complete)
 - **Build Status**: ✅ Compiling successfully
 - **Runtime Status**: ✅ Server running and responding
 - **Type Coverage**: High for migrated components
