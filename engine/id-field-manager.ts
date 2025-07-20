@@ -1,10 +1,10 @@
-import { Types, type ColumnDefinition } from './column.js';
-import { ID_FIELD } from './constants.js';
+import { Types, type ColumnDefinition } from './column';
+import { ID_FIELD } from './constants';
 import {
   createSchemaIdGenerator,
   type SchemaIdGenerator,
-} from './id-generator.js';
-import type { Schema } from './schema.js';
+} from './id-generator';
+import type { Schema } from './schema';
 
 /**
  * IdFieldManager - Handles ID field injection and management in schemas

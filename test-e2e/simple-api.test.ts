@@ -5,7 +5,7 @@ import {
   type HTTPResponse,
   type HealthResponse,
   type InsertResponse,
-} from './http-client.js';
+} from './http-client';
 
 describe('Simple-api', () => {
   let serverProcess: ChildProcess | null = null;

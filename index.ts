@@ -1,5 +1,5 @@
-import { App } from './http/app.js';
-import { EngineAPI } from './http/engine-api.js';
+import { App } from './http/app';
+import { EngineAPI } from './http/engine-api';
 
 const app = new App();
 const engineAPI = new EngineAPI();

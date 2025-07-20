@@ -1,4 +1,4 @@
-import { Types } from '../engine/column.js';
+import { Types } from '../engine/column';
 
 /**
  * External schema field definition

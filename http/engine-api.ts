@@ -1,9 +1,9 @@
-import type { App } from './app.js';
+import type { App } from './app';
 import {
   DatabaseManager,
   type DatabaseManagerOptions,
-} from './database-manager.js';
-import type { ExternalSchema } from './type-mapper.js';
+} from './database-manager';
+import type { ExternalSchema } from './type-mapper';
 
 /**
  * API request types

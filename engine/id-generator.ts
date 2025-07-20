@@ -1,6 +1,6 @@
-import { UNIQUE_IDENTIFIER_SIZE } from './constants.js';
-import type { Schema } from './schema.js';
-import { strHash } from './util.js';
+import { UNIQUE_IDENTIFIER_SIZE } from './constants';
+import type { Schema } from './schema';
+import { strHash } from './util';
 
 /**
  * IdGenerator - Handles unique ID generation with timestamp and counter

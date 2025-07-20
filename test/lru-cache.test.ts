@@ -1,4 +1,4 @@
-import { LRUCache, type CacheStats } from '../engine/lru-cache.js';
+import { LRUCache, type CacheStats } from '../engine/lru-cache';
 
 describe('Lru-cache', () => {
   it('basic cache operations', () => {

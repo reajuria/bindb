@@ -1,9 +1,9 @@
 import {
   DatabaseFileManager,
   type DatabaseMetadata,
-} from './database-file-manager.js';
-import type { Schema } from './schema.js';
-import { Table } from './table.js';
+} from './database-file-manager';
+import type { Schema } from './schema';
+import { Table } from './table';
 
 interface TableReference {
   name: string;

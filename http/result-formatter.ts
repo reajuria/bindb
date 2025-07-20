@@ -1,5 +1,5 @@
-import type { RowData } from '../engine/row.js';
-import type { BinDBSchemaField } from './type-mapper.js';
+import type { RowData } from '../engine/row';
+import type { BinDBSchemaField } from './type-mapper';
 
 /**
  * Result formatter configuration

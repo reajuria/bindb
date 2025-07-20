@@ -1,4 +1,4 @@
-import type { HttpResponse } from './types.js';
+import type { HttpResponse } from './types';
 
 /**
  * ResponseFormatter - Handles HTTP response formatting and serialization

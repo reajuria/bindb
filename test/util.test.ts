@@ -1,4 +1,4 @@
-import { strHash } from '../engine/util.js';
+import { strHash } from '../engine/util';
 
 describe('Util Functions', () => {
   test('strHash deterministic and length', () => {

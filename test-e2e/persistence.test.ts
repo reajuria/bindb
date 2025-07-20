@@ -5,7 +5,7 @@ import {
   type FindResponse,
   type HTTPResponse,
   type InsertResponse,
-} from './http-client.js';
+} from './http-client';
 
 describe('Persistence', () => {
   // Test data persistence across server restarts

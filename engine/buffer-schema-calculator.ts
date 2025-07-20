@@ -1,5 +1,5 @@
-import type { BufferSchema, BufferSchemaColumn } from './buffer-utils.js';
-import { Types, type ColumnDefinition } from './column.js';
+import type { BufferSchema, BufferSchemaColumn } from './buffer-utils';
+import { Types, type ColumnDefinition } from './column';
 import {
   BYTE_SIZE,
   COORDINATES_SIZE,
@@ -7,9 +7,9 @@ import {
   ID_FIELD,
   UINT16_SIZE,
   UNIQUE_IDENTIFIER_SIZE,
-} from './constants.js';
-import { ensureIdField } from './id-field-manager.js';
-import type { Schema } from './schema.js';
+} from './constants';
+import { ensureIdField } from './id-field-manager';
+import type { Schema } from './schema';
 
 /**
  * BufferSchemaCalculator - Calculates buffer schema and sizes for table columns

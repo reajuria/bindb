@@ -1,9 +1,5 @@
-import { Types } from './column.js';
-import {
-  DOUBLE_SIZE,
-  UINT16_SIZE,
-  UNIQUE_IDENTIFIER_SIZE,
-} from './constants.js';
+import { Types } from './column';
+import { DOUBLE_SIZE, UINT16_SIZE, UNIQUE_IDENTIFIER_SIZE } from './constants';
 
 /**
  * Buffer schema column definition

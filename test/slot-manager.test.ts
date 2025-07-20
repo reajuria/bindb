@@ -1,4 +1,4 @@
-import { SlotManager } from '../engine/slot-manager.js';
+import { SlotManager } from '../engine/slot-manager';
 
 describe('SlotManager', () => {
   let slotManager: SlotManager;

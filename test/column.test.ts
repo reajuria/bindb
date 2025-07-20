@@ -1,4 +1,4 @@
-import { uniqueId, uniqueIdDate } from '../engine/id-generator.js';
+import { uniqueId, uniqueIdDate } from '../engine/id-generator';
 
 describe('Column Functions', () => {
   test('uniqueId length and date extraction', () => {

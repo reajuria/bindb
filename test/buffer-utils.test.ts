@@ -1,7 +1,7 @@
-import { readColumn, writeColumn } from '../engine/buffer-utils.js';
-import { Types } from '../engine/column.js';
-import { parseBufferSchema, type BufferSchema } from '../engine/row.js';
-import { Schema, type ColumnDefinition } from '../engine/schema.js';
+import { readColumn, writeColumn } from '../engine/buffer-utils';
+import { Types } from '../engine/column';
+import { parseBufferSchema, type BufferSchema } from '../engine/row';
+import { Schema, type ColumnDefinition } from '../engine/schema';
 
 describe('Buffer-utils', () => {
   interface Coordinates {

@@ -1,9 +1,9 @@
 import type { Stats } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { FileManager, type WriteOperation } from './file-manager.js';
-import { parseBufferSchema, type BufferSchema } from './row.js';
-import { Schema } from './schema.js';
+import { FileManager, type WriteOperation } from './file-manager';
+import { parseBufferSchema, type BufferSchema } from './row';
+import { Schema } from './schema';
 
 /**
  * Table storage paths

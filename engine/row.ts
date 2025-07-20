@@ -11,7 +11,7 @@ export {
   type BufferSchemaStats,
   type ColumnSizeInfo,
   type SchemaValidation,
-} from './buffer-schema-calculator.js';
+} from './buffer-schema-calculator';
 
 export {
   readColumn,
@@ -20,7 +20,7 @@ export {
   type BufferSchemaColumn,
   type ColumnValue,
   type Coordinates,
-} from './buffer-utils.js';
+} from './buffer-utils';
 
 export {
   addIdField,
@@ -36,7 +36,7 @@ export {
   type IdFieldRequirements,
   type IdFieldResult,
   type IdFieldValidation,
-} from './id-field-manager.js';
+} from './id-field-manager';
 
 export {
   RowStatus,
@@ -53,4 +53,4 @@ export {
   type RowValidation,
   type SerializationResult,
   type SerializationStats,
-} from './row-serializer.js';
+} from './row-serializer';

@@ -4,10 +4,10 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http';
-import { CORSHandler } from './cors-handler.js';
-import { RequestParser } from './request-parser.js';
-import { ResponseFormatter } from './response-formatter.js';
-import { RouteResolver } from './route-resolver.js';
+import { CORSHandler } from './cors-handler';
+import { RequestParser } from './request-parser';
+import { ResponseFormatter } from './response-formatter';
+import { RouteResolver } from './route-resolver';
 import type {
   AppOptions,
   AppStats,
@@ -15,7 +15,7 @@ import type {
   HttpResponse,
   Route,
   RouteHandler,
-} from './types.js';
+} from './types';
 
 /**
  * App - HTTP server framework with routing capabilities

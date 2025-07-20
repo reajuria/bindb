@@ -1,5 +1,5 @@
 import type { IncomingHttpHeaders } from 'node:http';
-import type { CORSConfig, HttpResponse } from './types.js';
+import type { CORSConfig, HttpResponse } from './types';
 
 /**
  * CORSHandler - Handles Cross-Origin Resource Sharing (CORS) logic

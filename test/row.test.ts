@@ -1,4 +1,4 @@
-import { Types } from '../engine/column.js';
+import { Types } from '../engine/column';
 import {
   dataRowToBuffer,
   parseBufferSchema,
@@ -6,8 +6,8 @@ import {
   RowStatus,
   type BufferSchema,
   type RowData,
-} from '../engine/row.js';
-import { Schema, type ColumnDefinition } from '../engine/schema.js';
+} from '../engine/row';
+import { Schema, type ColumnDefinition } from '../engine/schema';
 
 describe('Row', () => {
   interface TestRowData extends Record<string, any> {

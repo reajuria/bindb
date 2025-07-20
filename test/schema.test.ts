@@ -1,5 +1,5 @@
-import { Types } from '../engine/column.js';
-import { Schema, type ColumnDefinition } from '../engine/schema.js';
+import { Types } from '../engine/column';
+import { Schema, type ColumnDefinition } from '../engine/schema';
 
 describe('Schema', () => {
   it('Schema create and toJSON/fromJSON', () => {

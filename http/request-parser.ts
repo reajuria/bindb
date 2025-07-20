@@ -1,6 +1,6 @@
 // import { randomUUID } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
-import type { ParsedRequest, RouteParams } from './types.js';
+import type { ParsedRequest, RouteParams } from './types';
 
 /**
  * Request parsing error

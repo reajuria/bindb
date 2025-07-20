@@ -1,20 +1,17 @@
-import { readColumn, type BufferSchema } from './buffer-utils.js';
-import { ID_FIELD } from './constants.js';
+import { readColumn, type BufferSchema } from './buffer-utils';
+import { ID_FIELD } from './constants';
 import {
   RowStatus,
   dataRowToBufferWithGenerated,
   parseDataRow,
   type RowData,
   type SerializationResult,
-} from './row.js';
-import type { Schema } from './schema.js';
-import { SlotManager, type SlotData, type SlotStats } from './slot-manager.js';
-import {
-  TableCacheManager,
-  type TableCacheStats,
-} from './table-cache-manager.js';
-import { TableMetrics, type ComprehensiveStats } from './table-metrics.js';
-import { TableStorageManager } from './table-storage-manager.js';
+} from './row';
+import type { Schema } from './schema';
+import { SlotManager, type SlotData, type SlotStats } from './slot-manager';
+import { TableCacheManager, type TableCacheStats } from './table-cache-manager';
+import { TableMetrics, type ComprehensiveStats } from './table-metrics';
+import { TableStorageManager } from './table-storage-manager';
 
 /**
  * Bulk insert write operation

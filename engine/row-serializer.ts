@@ -3,7 +3,7 @@ import {
   writeColumn,
   type BufferSchema,
   type ColumnValue,
-} from './buffer-utils.js';
+} from './buffer-utils';
 
 /**
  * RowSerializer - Handles row serialization and deserialization to/from binary format

@@ -4,7 +4,7 @@ import type {
   RouteHandler,
   RouteMatch,
   RouteStats,
-} from './types.js';
+} from './types';
 
 /**
  * RouteResolver - Handles route matching and parameter extraction

@@ -1,5 +1,5 @@
-import { Types, type ColumnDefinition } from './column.js';
-import { strHash } from './util.js';
+import { Types, type ColumnDefinition } from './column';
+import { strHash } from './util';
 
 // Re-export for external use
 export type { ColumnDefinition };

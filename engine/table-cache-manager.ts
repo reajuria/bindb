@@ -1,9 +1,9 @@
-import { LRUCache, type CacheStats } from './lru-cache.js';
+import { LRUCache, type CacheStats } from './lru-cache';
 import {
   WriteBuffer,
   type BufferStats,
   type FlushCallback,
-} from './write-buffer.js';
+} from './write-buffer';
 
 /**
  * Table cache manager configuration options
