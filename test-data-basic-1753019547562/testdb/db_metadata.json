@@ -1,0 +1,8 @@
+{
+  "tables": [
+    {
+      "name": "test_table",
+      "schema": "test_table.schema.json"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"database":"testdb","table":"test_table","columns":[{"name":"name","type":"Text","length":50},{"name":"age","type":"Number","length":8}]}
