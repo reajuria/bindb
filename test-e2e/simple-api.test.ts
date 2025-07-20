@@ -209,7 +209,7 @@ test('error handling - nonexistent record', async () => {
   assert.equal(response.status, 200);
   
   // Check if it's an error or null record
-  if (response.data.error) {
+  if ('error' in response.data && response.data.error) {
     assert.ok(response.data.error); // Error is expected for nonexistent table
   } else {
     assert.equal(response.data.record, null);

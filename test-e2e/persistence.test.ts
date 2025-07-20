@@ -9,10 +9,10 @@ const TEST_PORT = 3002;
 const STORAGE_PATH = `./test-data-persistence-${Date.now()}`;
 let client: HTTPClient;
 
-interface ServerStartResult {
-  process: ChildProcess;
-  client: HTTPClient;
-}
+// interface ServerStartResult {
+//   process: ChildProcess;
+//   client: HTTPClient;
+// }
 
 // Helper to start server
 function startServer(): Promise<ChildProcess> {
