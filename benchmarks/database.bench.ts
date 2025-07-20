@@ -49,19 +49,20 @@ describe('Database Performance Benchmarks', () => {
       await db.createTable('users', schema);
       const table = db.table('users');
 
-      const recordCount = 1000;
-      const records = Array.from({ length: recordCount }, (_, i) => ({
-        name: `User ${i}`,
-        email: `user${i}@example.com`,
-        age: 20 + (i % 50),
-        created_at: new Date()
-      }));
+      if (table) {
+        const recordCount = 1000;
+        const records = Array.from({ length: recordCount }, (_, i) => ({
+          name: `User ${i}`,
+          email: `user${i}@example.com`,
+          age: 20 + (i % 50),
+          created_at: new Date()
+        }));
 
-      const startTime = performance.now();
-      
-      for (const record of records) {
-        await table.insert(record);
-      }
+        const startTime = performance.now();
+        
+        for (const record of records) {
+          await table.insert(record);
+        }
 
       const endTime = performance.now();
       const totalTime = endTime - startTime;
@@ -74,10 +75,11 @@ describe('Database Performance Benchmarks', () => {
       console.log(`  Average Time per Record: ${(totalTime / recordCount).toFixed(3)}ms`);
 
              // Performance assertions (relaxed for CI environments)
-       const maxTime = process.env.CI ? 20000 : 10000;
-       const minThroughput = process.env.CI ? 50 : 100;
-       expect(totalTime).toBeLessThan(maxTime);
-       expect(throughput).toBeGreaterThan(minThroughput);
+               const maxTime = process.env.CI ? 20000 : 10000;
+        const minThroughput = process.env.CI ? 50 : 100;
+        expect(totalTime).toBeLessThan(maxTime);
+        expect(throughput).toBeGreaterThan(minThroughput);
+      }
     }, 15000);
 
     test('read performance with various access patterns', async () => {
@@ -91,35 +93,36 @@ describe('Database Performance Benchmarks', () => {
       await db.createTable('products', schema);
       const table = db.table('products');
 
-      // Insert test data
-      const recordCount = 500;
-      const insertedIds: string[] = [];
-      for (let i = 0; i < recordCount; i++) {
-        const record = await table.insert({
-          sku: `SKU-${i.toString().padStart(6, '0')}`,
-          name: `Product ${i}`,
-          price: Math.random() * 1000,
-          category: `Category ${i % 10}`
-        });
-        insertedIds.push(record.id as string);
-      }
+      if (table) {
+        // Insert test data
+        const recordCount = 500;
+        const insertedIds: string[] = [];
+        for (let i = 0; i < recordCount; i++) {
+          const record = await table.insert({
+            sku: `SKU-${i.toString().padStart(6, '0')}`,
+            name: `Product ${i}`,
+            price: Math.random() * 1000,
+            category: `Category ${i % 10}`
+          });
+          insertedIds.push(record.id as string);
+        }
 
-      // Sequential read test
-      const sequentialStartTime = performance.now();
-      for (let i = 0; i < Math.min(100, recordCount); i++) {
-        await table.get(insertedIds[i]);
-      }
-      const sequentialEndTime = performance.now();
-      const sequentialTime = sequentialEndTime - sequentialStartTime;
+        // Sequential read test
+        const sequentialStartTime = performance.now();
+        for (let i = 0; i < Math.min(100, recordCount); i++) {
+          await table.get(insertedIds[i]);
+        }
+        const sequentialEndTime = performance.now();
+        const sequentialTime = sequentialEndTime - sequentialStartTime;
 
-      // Random read test
-      const randomStartTime = performance.now();
-      for (let i = 0; i < 100; i++) {
-        const randomIndex = Math.floor(Math.random() * insertedIds.length);
-        await table.get(insertedIds[randomIndex]);
-      }
-      const randomEndTime = performance.now();
-      const randomTime = randomEndTime - randomStartTime;
+        // Random read test
+        const randomStartTime = performance.now();
+        for (let i = 0; i < 100; i++) {
+          const randomIndex = Math.floor(Math.random() * insertedIds.length);
+          await table.get(insertedIds[randomIndex]);
+        }
+        const randomEndTime = performance.now();
+        const randomTime = randomEndTime - randomStartTime;
 
       console.log(`\n📊 Read Performance:`);
       console.log(`  Sequential Reads (100): ${sequentialTime.toFixed(2)}ms`);
@@ -128,10 +131,11 @@ describe('Database Performance Benchmarks', () => {
       console.log(`  Avg Random: ${(randomTime / 100).toFixed(3)}ms per read`);
 
              // Performance assertions (relaxed for CI environments)
-       const maxSequentialTime = process.env.CI ? 15 : 5;
-       const maxRandomTime = process.env.CI ? 20 : 10;
-       expect(sequentialTime / 100).toBeLessThan(maxSequentialTime);
-       expect(randomTime / 100).toBeLessThan(maxRandomTime);
+               const maxSequentialTime = process.env.CI ? 15 : 5;
+        const maxRandomTime = process.env.CI ? 20 : 10;
+        expect(sequentialTime / 100).toBeLessThan(maxSequentialTime);
+        expect(randomTime / 100).toBeLessThan(maxRandomTime);
+      }
     }, 10000);
 
     test('update performance', async () => {
@@ -144,29 +148,30 @@ describe('Database Performance Benchmarks', () => {
       await db.createTable('counters', schema);
       const table = db.table('counters');
 
-      // Insert initial records
-      const recordCount = 200;
-      const insertedIds: string[] = [];
-      for (let i = 0; i < recordCount; i++) {
-        const record = await table.insert({
-          name: `Counter ${i}`,
-          value: 0,
-          last_updated: new Date()
-        });
-        insertedIds.push(record.id as string);
-      }
+      if (table) {
+        // Insert initial records
+        const recordCount = 200;
+        const insertedIds: string[] = [];
+        for (let i = 0; i < recordCount; i++) {
+          const record = await table.insert({
+            name: `Counter ${i}`,
+            value: 0,
+            last_updated: new Date()
+          });
+          insertedIds.push(record.id as string);
+        }
 
-      // Update performance test
-      const updateCount = 100;
-      const startTime = performance.now();
+        // Update performance test
+        const updateCount = 100;
+        const startTime = performance.now();
 
-      for (let i = 0; i < updateCount; i++) {
-        const id = insertedIds[i % insertedIds.length];
-        await table.update(id, {
-          value: i,
-          last_updated: new Date()
-        });
-      }
+        for (let i = 0; i < updateCount; i++) {
+          const id = insertedIds[i % insertedIds.length];
+          await table.update(id, {
+            value: i,
+            last_updated: new Date()
+          });
+        }
 
       const endTime = performance.now();
       const totalTime = endTime - startTime;
@@ -179,10 +184,11 @@ describe('Database Performance Benchmarks', () => {
       console.log(`  Average Time per Update: ${(totalTime / updateCount).toFixed(3)}ms`);
 
              // Performance assertions (relaxed for CI environments)
-       const maxUpdateTime = process.env.CI ? 10000 : 5000;
-       const minUpdateThroughput = process.env.CI ? 10 : 20;
-       expect(totalTime).toBeLessThan(maxUpdateTime);
-       expect(throughput).toBeGreaterThan(minUpdateThroughput);
+               const maxUpdateTime = process.env.CI ? 10000 : 5000;
+        const minUpdateThroughput = process.env.CI ? 10 : 20;
+        expect(totalTime).toBeLessThan(maxUpdateTime);
+        expect(throughput).toBeGreaterThan(minUpdateThroughput);
+      }
     }, 10000);
   });
 
@@ -197,18 +203,19 @@ describe('Database Performance Benchmarks', () => {
       await db.createTable('documents', schema);
       const table = db.table('documents');
 
-      const recordCount = 100;
-      const documents = Array.from({ length: recordCount }, (_, i) => ({
-        title: `Document ${i} - ${new Array(50).fill('A').join('')}`,
-        content: `Content for document ${i} - ${new Array(500).fill('Lorem ipsum dolor sit amet. ').join('')}`,
-        tags: `tag1,tag2,tag3,document${i},test,benchmark`
-      }));
+      if (table) {
+        const recordCount = 100;
+        const documents = Array.from({ length: recordCount }, (_, i) => ({
+          title: `Document ${i} - ${new Array(50).fill('A').join('')}`,
+          content: `Content for document ${i} - ${new Array(500).fill('Lorem ipsum dolor sit amet. ').join('')}`,
+          tags: `tag1,tag2,tag3,document${i},test,benchmark`
+        }));
 
-      const startTime = performance.now();
-      
-      for (const doc of documents) {
-        await table.insert(doc);
-      }
+        const startTime = performance.now();
+        
+        for (const doc of documents) {
+          await table.insert(doc);
+        }
 
       const endTime = performance.now();
       const insertTime = endTime - startTime;
@@ -235,10 +242,11 @@ describe('Database Performance Benchmarks', () => {
       console.log(`  Insert Time: ${insertTime.toFixed(2)}ms`);
 
              // Storage efficiency assertions (relaxed for CI environments)
-       const maxDocSize = process.env.CI ? 8000 : 5000;
-       const maxInsertTime = process.env.CI ? 15000 : 8000;
-       expect(avgDocumentSize).toBeLessThan(maxDocSize);
-       expect(insertTime).toBeLessThan(maxInsertTime);
+               const maxDocSize = process.env.CI ? 8000 : 5000;
+        const maxInsertTime = process.env.CI ? 15000 : 8000;
+        expect(avgDocumentSize).toBeLessThan(maxDocSize);
+        expect(insertTime).toBeLessThan(maxInsertTime);
+      }
     }, 12000);
   });
 });

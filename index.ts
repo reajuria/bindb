@@ -21,4 +21,7 @@ process.on('SIGINT', async () => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port);
+console.log(`Starting server on port ${port}...`);
+app.listen(port, () => {
+  console.log(`✅ BinDB server ready on port ${port}`);
+});

@@ -193,7 +193,7 @@ describe('Buffer-utils', () => {
       if (Number.isNaN(specialNumber)) {
         expect(Number.isNaN(readNumber)).toBeTruthy();
       } else {
-        expect(readNumber).toBe(specialNumber, `Failed for ${specialNumber}`);
+        expect(readNumber).toBe(specialNumber);
       }
     }
   });
@@ -214,7 +214,7 @@ describe('Buffer-utils', () => {
     for (const unicodeText of unicodeTexts) {
       writeColumn(buffer, bufferSchema.schema, 'text_field', unicodeText);
       const readText = readColumn(buffer, bufferSchema, 'text_field') as string;
-      expect(readText).toBe(unicodeText, `Failed for unicode text: ${unicodeText}`);
+      expect(readText).toBe(unicodeText);
     }
   });
   
@@ -235,8 +235,8 @@ describe('Buffer-utils', () => {
       writeColumn(buffer, bufferSchema.schema, 'coordinates_field', coords);
       const readCoords = readColumn(buffer, bufferSchema, 'coordinates_field') as Coordinates;
       
-      expect(readCoords.lat).toBe(coords.lat, `Latitude mismatch for ${JSON.stringify(coords)}`);
-      expect(readCoords.lng).toBe(coords.lng, `Longitude mismatch for ${JSON.stringify(coords)}`);
+      expect(readCoords.lat).toBe(coords.lat);
+      expect(readCoords.lng).toBe(coords.lng);
     }
   });
   

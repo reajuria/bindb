@@ -281,35 +281,37 @@ describe('Simple-api', () => {
   
   // Cleanup after tests
   it('cleanup server', async () => {
-    if (serverProcess) {
-      return new Promise<void>((resolve) => {
-        let killTimeoutHandle: NodeJS.Timeout | null = null;
-        
-        const cleanup = () => {
-          if (killTimeoutHandle) {
-            clearTimeout(killTimeoutHandle);
-            killTimeoutHandle = null;
-          }
-          serverProcess = null;
-          resolve();
-        };
+          if (serverProcess) {
+        return new Promise<void>((resolve) => {
+          let killTimeoutHandle: NodeJS.Timeout | null = null;
+          
+          const cleanup = () => {
+            if (killTimeoutHandle) {
+              clearTimeout(killTimeoutHandle);
+              killTimeoutHandle = null;
+            }
+            serverProcess = null;
+            resolve();
+          };
 
-        serverProcess.on('exit', cleanup);
-        serverProcess.on('close', cleanup);
+          if (serverProcess) {
+            serverProcess.on('exit', cleanup);
+            serverProcess.on('close', cleanup);
         
-        // Try graceful shutdown first
-        serverProcess.kill('SIGTERM');
-        
-        // Force kill after shorter timeout in CI
-        const killTimeout = process.env.CI ? 2000 : 5000;
-        killTimeoutHandle = setTimeout(() => {
-          if (serverProcess && !serverProcess.killed) {
-            serverProcess.kill('SIGKILL');
-            cleanup();
+                    // Try graceful shutdown first
+            serverProcess.kill('SIGTERM');
+            
+            // Force kill after shorter timeout in CI
+            const killTimeout = process.env.CI ? 2000 : 5000;
+            killTimeoutHandle = setTimeout(() => {
+              if (serverProcess && !serverProcess.killed) {
+                serverProcess.kill('SIGKILL');
+                cleanup();
+              }
+            }, killTimeout);
           }
-        }, killTimeout);
-      });
-    }
-  });
+        });
+      }
+    });
   
 });
