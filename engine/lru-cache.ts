@@ -21,9 +21,6 @@ export class LRUCache<K extends string | number, V> {
     this.cache = new Map<K, V>();
   }
 
-  /**
-   * Get a value from the cache
-   */
   get(key: K): V | undefined {
     if (!this.cache.has(key)) {
       return undefined;
@@ -38,9 +35,6 @@ export class LRUCache<K extends string | number, V> {
     return value;
   }
 
-  /**
-   * Set a value in the cache
-   */
   set(key: K, value: V): void {
     // If key already exists, update it
     if (this.cache.has(key)) {
@@ -69,9 +63,6 @@ export class LRUCache<K extends string | number, V> {
     return this.cache.has(key);
   }
 
-  /**
-   * Remove a key from the cache
-   */
   delete(key: K): boolean {
     return this.cache.delete(key);
   }
@@ -83,16 +74,10 @@ export class LRUCache<K extends string | number, V> {
     this.cache.clear();
   }
 
-  /**
-   * Get the current size of the cache
-   */
   get size(): number {
     return this.cache.size;
   }
 
-  /**
-   * Get cache statistics
-   */
   getStats(): CacheStats {
     return {
       size: this.cache.size,

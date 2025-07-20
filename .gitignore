@@ -170,3 +170,12 @@ data/
 test-data-basic-*
 test-data-persistence-*
 test-data-*
+
+# Development documentation (temporary files)
+CI_FIXES*.md
+CLEANUP_SUMMARY*.md
+ESLINT_PRETTIER_SETUP*.md
+TYPESCRIPT_MIGRATION*.md
+*_SETUP.md
+*_FIXES*.md
+*_SUMMARY*.md

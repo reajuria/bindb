@@ -332,9 +332,6 @@ export class Table {
     this.cacheManager.clearAll();
   }
 
-  /**
-   * Get performance statistics for the table
-   */
   getStats(): ComprehensiveStats {
     return this.metrics.getComprehensiveStats(
       this.slotManager.getStats(),
@@ -342,30 +339,18 @@ export class Table {
     );
   }
 
-  /**
-   * Get write buffer statistics
-   */
   getWriteBufferStats(): any {
     return this.cacheManager.getWriteBufferStats();
   }
 
-  /**
-   * Get read cache statistics
-   */
   getReadCacheStats(): any {
     return this.cacheManager.getReadCacheStats();
   }
 
-  /**
-   * Get slot manager statistics
-   */
   getSlotStats(): SlotStats {
     return this.slotManager.getStats();
   }
 
-  /**
-   * Get cache manager statistics
-   */
   getCacheStats(): TableCacheStats {
     return this.cacheManager.getStats();
   }
@@ -387,30 +372,18 @@ export class Table {
     return results;
   }
 
-  /**
-   * Get table schema
-   */
   getSchema(): Schema {
     return this.storageManager.getSchema();
   }
 
-  /**
-   * Get buffer schema
-   */
   getBufferSchema(): BufferSchema {
     return this.storageManager.getBufferSchema();
   }
 
-  /**
-   * Check if table is loaded
-   */
   get isLoaded(): boolean {
     return this.storageManager.isSchemaLoaded;
   }
 
-  /**
-   * Get record count
-   */
   get recordCount(): number {
     return this.slotManager.allocatedCount;
   }

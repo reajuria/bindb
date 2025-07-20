@@ -138,9 +138,6 @@ export class Database {
     return this.tables.get(name);
   }
 
-  /**
-   * Get table or throw error if not found
-   */
   getTable(name: string): Table {
     const table = this.tables.get(name);
     if (!table) {
@@ -156,16 +153,10 @@ export class Database {
     return this.tables.has(name);
   }
 
-  /**
-   * Get all table names
-   */
   getTableNames(): string[] {
     return Array.from(this.tables.keys());
   }
 
-  /**
-   * Get all tables
-   */
   getTables(): Table[] {
     return Array.from(this.tables.values());
   }
@@ -197,9 +188,6 @@ export class Database {
     return true;
   }
 
-  /**
-   * Get database statistics
-   */
   getStats(): {
     name: string;
     tableCount: number;
@@ -240,23 +228,14 @@ export class Database {
     this.tables.clear();
   }
 
-  /**
-   * Get database metadata
-   */
   getMetadata(): DatabaseMetadataWithTables {
     return { ...this.metadata };
   }
 
-  /**
-   * Check if database is initialized
-   */
   get isInitialized(): boolean {
     return this.tables.size > 0 || this.metadata.tables.length === 0;
   }
 
-  /**
-   * Get table count
-   */
   get tableCount(): number {
     return this.tables.size;
   }

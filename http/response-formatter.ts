@@ -24,9 +24,6 @@ export class ResponseFormatter {
     return this.createTextResponse(String(result));
   }
 
-  /**
-   * Create empty response
-   */
   createEmptyResponse(): HttpResponse {
     return {
       body: undefined,
@@ -37,9 +34,6 @@ export class ResponseFormatter {
     };
   }
 
-  /**
-   * Create text/HTML response
-   */
   createTextResponse(content: string): HttpResponse {
     return {
       body: content,
@@ -51,9 +45,6 @@ export class ResponseFormatter {
     };
   }
 
-  /**
-   * Create JSON response
-   */
   createJsonResponse(data: any, _origin: string = '*'): HttpResponse {
     const body = JSON.stringify(data, null, 2);
 
