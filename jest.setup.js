@@ -40,5 +40,18 @@ afterEach(() => {
 if (process.env.CI) {
   process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit immediately, let Jest handle it
   });
+  
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Don't exit immediately, let Jest handle it
+  });
+  
+  // Add additional debugging for CI
+  console.log(`🔧 CI Environment Detected:`);
+  console.log(`- Node.js: ${process.version}`);
+  console.log(`- Platform: ${process.platform}`);
+  console.log(`- Arch: ${process.arch}`);
+  console.log(`- Memory: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`);
 }

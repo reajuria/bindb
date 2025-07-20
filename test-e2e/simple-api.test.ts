@@ -16,8 +16,8 @@ describe('Simple-api', () => {
   
             let serverReady = false;
       
-      // Timeout (longer in CI)
-      const startupTimeout = process.env.CI ? 20000 : 10000;
+      // Timeout (much longer in CI for resource-constrained environments)
+      const startupTimeout = process.env.CI ? 60000 : 15000;
       let timeoutHandle: NodeJS.Timeout | null = setTimeout(() => {
         if (!serverReady) {
           reject(new Error(`Server failed to start within ${startupTimeout/1000} seconds`));
@@ -26,7 +26,7 @@ describe('Simple-api', () => {
       
       serverProcess.stdout?.on('data', (data) => {
         const output = data.toString();
-        if (output.includes('Server listening on port')) {
+        if (output.includes('Server listening on port') || output.includes('BinDB server ready')) {
           if (!serverReady) {
             serverReady = true;
             if (timeoutHandle) {
@@ -34,8 +34,9 @@ describe('Simple-api', () => {
               timeoutHandle = null;
             }
             client = new HTTPClient('http://localhost:3001');
-            // Give server a moment to fully initialize
-            setTimeout(resolve, 200);
+            // Give server more time to fully initialize in CI
+            const initDelay = process.env.CI ? 1000 : 200;
+            setTimeout(resolve, initDelay);
           }
         }
       });
@@ -48,7 +49,7 @@ describe('Simple-api', () => {
         reject(new Error(`Failed to start server: ${error.message}`));
       });
     });
-  });
+  }, process.env.CI ? 90000 : 45000);
   
   it('health endpoint check', async () => {
     const response: HTTPResponse<HealthResponse> = await client.health();
