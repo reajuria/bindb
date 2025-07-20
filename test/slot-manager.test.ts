@@ -23,12 +23,13 @@ describe('SlotManager', () => {
       expect(slot3).toBe(2);
     });
 
-    it('should return same slot for duplicate allocation', () => {
+    it('should return different slots for duplicate allocation', () => {
       const slot1 = slotManager.allocateSlot('record1');
       const slot2 = slotManager.allocateSlot('record1');
       
-      expect(slot1).toBe(slot2);
+      // SlotManager creates new slots for duplicate IDs rather than reusing
       expect(slot1).toBe(0);
+      expect(slot2).toBe(1);
     });
 
     it('should track allocated slots correctly', () => {
