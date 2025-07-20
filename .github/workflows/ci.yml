@@ -26,13 +26,19 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Run tests with coverage
+    - name: Run tests with coverage (excluding benchmarks)
       run: npm run test:ci
+      env:
+        CI: true
     
     - name: Run quick benchmark tests
       run: npm run benchmark:quick
       continue-on-error: true
+      env:
+        CI: true
     
     - name: Run comprehensive benchmark tests
       run: npm run benchmark
       continue-on-error: true
+      env:
+        CI: true

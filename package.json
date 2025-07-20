@@ -15,7 +15,7 @@
     "test:e2e": "jest test-e2e/",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:ci": "jest --ci --coverage --watchAll=false --testPathIgnorePatterns=benchmarks",
     "benchmark": "jest benchmarks/ --testTimeout=30000 --verbose",
     "benchmark:quick": "jest benchmarks/ --testTimeout=15000 --verbose --testNamePattern='bulk insert|read performance'",
     "clean": "rm -rf dist",

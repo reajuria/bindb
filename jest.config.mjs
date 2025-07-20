@@ -29,5 +29,8 @@ export default {
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testTimeout: 30000,
-  verbose: true
+  verbose: true,
+  maxWorkers: process.env.CI ? 1 : undefined,
+  forceExit: true,
+  detectOpenHandles: true
 };

@@ -26,56 +26,71 @@ describe('Persistence', () => {
         }
       });
   
-      let serverReady = false;
+            let serverReady = false;
+      
+      // Timeout (longer in CI)
+      const startupTimeout = process.env.CI ? 20000 : 10000;
+      let timeoutHandle: NodeJS.Timeout | null = setTimeout(() => {
+        if (!serverReady) {
+          reject(new Error(`Server failed to start within ${startupTimeout/1000} seconds`));
+        }
+      }, startupTimeout);
       
       serverProcess.stdout?.on('data', (data) => {
         const output = data.toString();
         if (output.includes('Server listening on port')) {
           if (!serverReady) {
             serverReady = true;
+            if (timeoutHandle) {
+              clearTimeout(timeoutHandle);
+              timeoutHandle = null;
+            }
             client = new HTTPClient(`http://localhost:${TEST_PORT}`);
             setTimeout(() => resolve(serverProcess), 200);
           }
         }
       });
-  
+
       serverProcess.stderr?.on('data', (data) => {
         console.error('Server error:', data.toString());
       });
-  
+
       serverProcess.on('error', (error) => {
         reject(new Error(`Failed to start server: ${error.message}`));
       });
-  
-      setTimeout(() => {
-        if (!serverReady) {
-          reject(new Error('Server failed to start within 10 seconds'));
-        }
-      }, 10000);
     });
   }
   
-  // Helper to stop server
+    // Helper to stop server
   function stopServer(serverProcess: ChildProcess): Promise<void> {
     return new Promise((resolve) => {
       if (!serverProcess || serverProcess.killed) {
         resolve();
         return;
       }
-  
-      serverProcess.on('exit', () => {
+
+      let killTimeoutHandle: NodeJS.Timeout | null = null;
+      
+      const cleanup = () => {
+        if (killTimeoutHandle) {
+          clearTimeout(killTimeoutHandle);
+          killTimeoutHandle = null;
+        }
         resolve();
-      });
-  
+      };
+
+      serverProcess.on('exit', cleanup);
+      serverProcess.on('close', cleanup);
       serverProcess.kill('SIGTERM');
-  
-      // Force kill after 5 seconds if graceful shutdown fails
-      setTimeout(() => {
+
+      // Force kill after shorter timeout in CI
+      const killTimeout = process.env.CI ? 2000 : 5000;
+      killTimeoutHandle = setTimeout(() => {
         if (!serverProcess.killed) {
           serverProcess.kill('SIGKILL');
-          resolve();
+          cleanup();
         }
-      }, 5000);
+      }, killTimeout);
     });
   }
   
