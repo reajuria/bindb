@@ -225,6 +225,13 @@ export class App {
   }
 
   /**
+   * Get current CORS configuration
+   */
+  getCORSConfig(): CORSConfig {
+    return this.corsHandler.getConfig();
+  }
+
+  /**
    * Get all registered routes
    */
   getRoutes(): Route[] {
