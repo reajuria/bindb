@@ -17,11 +17,31 @@ export class ResponseFormatter {
     }
 
     if (typeof result === 'object') {
+      // Check if result is already a pre-formatted HttpResponse
+      if (this.isHttpResponse(result)) {
+        return result;
+      }
+
       return this.createJsonResponse(result, origin);
     }
 
     // Fallback for other types
     return this.createTextResponse(String(result));
+  }
+
+  /**
+   * Check if an object is a pre-formatted HttpResponse
+   */
+  private isHttpResponse(obj: any): obj is HttpResponse {
+    return (
+      obj &&
+      typeof obj === 'object' &&
+      typeof obj.statusCode === 'number' &&
+      (obj.headers === undefined || typeof obj.headers === 'object') &&
+      (obj.body === undefined ||
+        typeof obj.body === 'string' ||
+        Buffer.isBuffer(obj.body))
+    );
   }
 
   createEmptyResponse(): HttpResponse {
