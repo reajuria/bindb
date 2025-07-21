@@ -362,6 +362,34 @@ export class EngineAPI {
    * Register utility routes
    */
   private registerUtilityRoutes(app: App): void {
+    // Admin interface
+    app.get('/admin', async _req => {
+      try {
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const adminHtmlPath = path.join(process.cwd(), 'admin.html');
+        const adminHtml = await fs.readFile(adminHtmlPath, 'utf-8');
+        
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-cache'
+          },
+          body: adminHtml
+        };
+      } catch (error) {
+        return {
+          statusCode: 500,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            error: 'Failed to load admin interface',
+            message: (error as Error).message
+          })
+        };
+      }
+    });
+
     // Health check
     app.get('/v1/health', async _req => {
       try {

@@ -66,6 +66,7 @@ docker run -p 8080:8080 bindb
 ### API Endpoints
 
 Once deployed, your BinDB instance will be available at:
+- **Admin Interface**: `https://your-service-url/admin` - Web-based database management
 - **Health Check**: `https://your-service-url/v1/health`
 - **API Base**: `https://your-service-url/v1/`
 - **Documentation**: `https://your-service-url/v1/docs`
@@ -125,6 +126,45 @@ npm run lint:fix
 npm run format
 ```
 
+## 🖥️ Admin Interface
+
+BinDB includes a comprehensive web-based admin interface for easy database management:
+
+### Access the Admin Interface
+
+```bash
+# Start the server
+npm start
+
+# Open in browser
+open http://localhost:3000/admin
+```
+
+### Features
+
+- **Health Monitoring**: Real-time server status and uptime
+- **Table Management**: Create, list, and view table schemas
+- **Data Operations**: Insert, update, delete, and find records
+- **Bulk Operations**: Efficient bulk insert capabilities
+- **Statistics**: Database and table statistics
+- **API Information**: Complete endpoint documentation
+- **System Metrics**: Performance monitoring
+
+### Supported Operations
+
+- ✅ Create tables with custom schemas
+- ✅ List all tables in a database
+- ✅ View table schemas and structure
+- ✅ Insert single records
+- ✅ Bulk insert multiple records
+- ✅ Find records by ID
+- ✅ Update existing records
+- ✅ Delete records
+- ✅ Count records in tables
+- ✅ View database statistics
+- ✅ Monitor system health
+- ✅ Access API information
+
 ## 📊 Architecture
 
 ### Core Components
@@ -172,5 +212,7 @@ Modern Jest-based testing with comprehensive coverage:
 - ✅ Cloud Run Button deployment ready
 - ✅ Docker containerization
 - ✅ Health monitoring and auto-scaling
+- ✅ Web-based admin interface
+- ✅ Complete database management UI
 
 Built with ❤️, TypeScript, and Jest for maximum reliability, performance, and developer experience.
