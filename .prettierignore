@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+test-data-*/
+*.d.ts
+package-lock.json
+CHANGELOG.md
+*.md
