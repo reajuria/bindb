@@ -91,7 +91,7 @@ export class EngineAPI {
    */
   registerRoutes(app: App): void {
     this.app = app;
-    
+
     // Core database operations
     this.registerTableRoutes(app);
     this.registerDataRoutes(app);
@@ -372,14 +372,14 @@ export class EngineAPI {
         const path = await import('path');
         const adminHtmlPath = path.join(process.cwd(), 'admin.html');
         const adminHtml = await fs.readFile(adminHtmlPath, 'utf-8');
-        
+
         return {
           statusCode: 200,
           headers: {
             'Content-Type': 'text/html',
-            'Cache-Control': 'no-cache'
+            'Cache-Control': 'no-cache',
           },
-          body: adminHtml
+          body: adminHtml,
         };
       } catch (error) {
         return {
@@ -387,8 +387,8 @@ export class EngineAPI {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             error: 'Failed to load admin interface',
-            message: (error as Error).message
-          })
+            message: (error as Error).message,
+          }),
         };
       }
     });

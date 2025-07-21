@@ -1,820 +1,1033 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BinDB Admin Interface</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
 
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
 
-        .status-bar {
-            background: #f8f9fa;
-            padding: 15px 30px;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+      .status-bar {
+        background: #f8f9fa;
+        padding: 15px 30px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
 
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
 
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #28a745;
-        }
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #28a745;
+      }
 
+      .main-content {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 600px;
+      }
+
+      .sidebar {
+        background: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+        padding: 20px;
+      }
+
+      .nav-section {
+        margin-bottom: 30px;
+      }
+
+      .nav-section h3 {
+        color: #495057;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .nav-item {
+        display: block;
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #495057;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .nav-item:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+      }
+
+      .nav-item.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+
+      .content-area {
+        padding: 30px;
+      }
+
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      .section h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        font-weight: 500;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #495057;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #1e7e34;
+      }
+
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c82333;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      .response-area {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .response-area h4 {
+        margin-bottom: 10px;
+        color: #495057;
+      }
+
+      .json-display {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        overflow-x: auto;
+      }
+
+      .error {
+        color: #dc3545;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+
+      .success {
+        color: #155724;
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+
+      .schema-builder {
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 20px;
+        background: #f8f9fa;
+      }
+
+      .schema-field {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+      }
+
+      .schema-field input,
+      .schema-field select {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 0.85rem;
+      }
+
+      .remove-field {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+
+      .add-field {
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 15px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      .table-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .table-item {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .table-item:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+      }
+
+      .table-item h4 {
+        margin-bottom: 5px;
+        color: #495057;
+      }
+
+      .table-item p {
+        font-size: 0.85rem;
+        color: #6c757d;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #007bff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
         .main-content {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            min-height: 600px;
+          grid-template-columns: 1fr;
         }
 
         .sidebar {
-            background: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-            padding: 20px;
-        }
-
-        .nav-section {
-            margin-bottom: 30px;
-        }
-
-        .nav-section h3 {
-            color: #495057;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .nav-item {
-            display: block;
-            padding: 12px 15px;
-            margin-bottom: 5px;
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            text-decoration: none;
-            color: #495057;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .nav-item:hover {
-            background: #e9ecef;
-            border-color: #adb5bd;
-        }
-
-        .nav-item.active {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-
-        .content-area {
-            padding: 30px;
-        }
-
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        .section h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            font-weight: 500;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #495057;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: border-color 0.2s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+          border-right: none;
+          border-bottom: 1px solid #e9ecef;
         }
 
         .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #1e7e34;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-
-        .response-area {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border: 1px solid #e9ecef;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .response-area h4 {
-            margin-bottom: 10px;
-            color: #495057;
-        }
-
-        .json-display {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 15px;
-            border-radius: 4px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.85rem;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-
-        .error {
-            color: #dc3545;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .success {
-            color: #155724;
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .schema-builder {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            padding: 20px;
-            background: #f8f9fa;
+          grid-template-columns: 1fr;
         }
 
         .schema-field {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr auto;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 4px;
+          grid-template-columns: 1fr;
+          gap: 5px;
         }
-
-        .schema-field input, .schema-field select {
-            padding: 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        .remove-field {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .add-field {
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 15px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .table-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .table-item {
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .table-item:hover {
-            border-color: #007bff;
-            box-shadow: 0 2px 8px rgba(0,123,255,0.1);
-        }
-
-        .table-item h4 {
-            margin-bottom: 5px;
-            color: #495057;
-        }
-
-        .table-item p {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: #6c757d;
-        }
-
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #007bff;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .schema-field {
-                grid-template-columns: 1fr;
-                gap: 5px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>BinDB Admin</h1>
-            <p>Binary Database Management Interface</p>
+      <div class="header">
+        <h1>BinDB Admin</h1>
+        <p>Binary Database Management Interface</p>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-item">
+          <div class="status-indicator" id="health-indicator"></div>
+          <span id="health-status">Checking...</span>
+        </div>
+        <div class="status-item">
+          <span>API Version: <strong>1.0.0</strong></span>
+        </div>
+        <div class="status-item">
+          <span>Uptime: <strong id="uptime">--</strong></span>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="sidebar">
+          <div class="nav-section">
+            <h3>Database Operations</h3>
+            <a class="nav-item active" data-section="health">Health Check</a>
+            <a class="nav-item" data-section="tables">Tables</a>
+            <a class="nav-item" data-section="data">Data Operations</a>
+            <a class="nav-item" data-section="stats">Statistics</a>
+          </div>
+
+          <div class="nav-section">
+            <h3>Table Management</h3>
+            <a class="nav-item" data-section="create-table">Create Table</a>
+            <a class="nav-item" data-section="list-tables">List Tables</a>
+            <a class="nav-item" data-section="table-schema">Table Schema</a>
+          </div>
+
+          <div class="nav-section">
+            <h3>Data Operations</h3>
+            <a class="nav-item" data-section="insert">Insert Record</a>
+            <a class="nav-item" data-section="bulk-insert">Bulk Insert</a>
+            <a class="nav-item" data-section="find">Find Record</a>
+            <a class="nav-item" data-section="update">Update Record</a>
+            <a class="nav-item" data-section="delete">Delete Record</a>
+            <a class="nav-item" data-section="count">Count Records</a>
+          </div>
+
+          <div class="nav-section">
+            <h3>System</h3>
+            <a class="nav-item" data-section="api-info">API Info</a>
+            <a class="nav-item" data-section="cors">CORS Config</a>
+            <a class="nav-item" data-section="metrics">Metrics</a>
+          </div>
         </div>
 
-        <div class="status-bar">
-            <div class="status-item">
-                <div class="status-indicator" id="health-indicator"></div>
-                <span id="health-status">Checking...</span>
+        <div class="content-area">
+          <!-- Health Check Section -->
+          <div class="section active" id="health">
+            <h2>Health Check</h2>
+            <p>Check the health and status of the BinDB server.</p>
+            <button class="btn btn-primary" onclick="checkHealth()">
+              Check Health
+            </button>
+            <div
+              class="response-area"
+              id="health-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="health-json"></div>
             </div>
-            <div class="status-item">
-                <span>API Version: <strong>1.0.0</strong></span>
+          </div>
+
+          <!-- Create Table Section -->
+          <div class="section" id="create-table">
+            <h2>Create Table</h2>
+            <div class="form-group">
+              <label for="create-database">Database Name:</label>
+              <input
+                type="text"
+                id="create-database"
+                class="form-control"
+                placeholder="Enter database name"
+              />
             </div>
-            <div class="status-item">
-                <span>Uptime: <strong id="uptime">--</strong></span>
+            <div class="form-group">
+              <label for="create-table-name">Table Name:</label>
+              <input
+                type="text"
+                id="create-table-name"
+                class="form-control"
+                placeholder="Enter table name"
+              />
             </div>
+            <div class="form-group">
+              <label>Schema Definition:</label>
+              <div class="schema-builder">
+                <div id="schema-fields"></div>
+                <button class="add-field" onclick="addSchemaField()">
+                  Add Field
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-success" onclick="createTable()">
+              Create Table
+            </button>
+            <div
+              class="response-area"
+              id="create-table-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="create-table-json"></div>
+            </div>
+          </div>
+
+          <!-- List Tables Section -->
+          <div class="section" id="list-tables">
+            <h2>List Tables</h2>
+            <div class="form-group">
+              <label for="list-database">Database Name:</label>
+              <input
+                type="text"
+                id="list-database"
+                class="form-control"
+                placeholder="Enter database name"
+              />
+            </div>
+            <button class="btn btn-primary" onclick="listTables()">
+              List Tables
+            </button>
+            <div
+              class="response-area"
+              id="list-tables-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="list-tables-json"></div>
+            </div>
+          </div>
+
+          <!-- Table Schema Section -->
+          <div class="section" id="table-schema">
+            <h2>Get Table Schema</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="schema-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="schema-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="schema-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="schema-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="getTableSchema()">
+              Get Schema
+            </button>
+            <div
+              class="response-area"
+              id="schema-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="schema-json"></div>
+            </div>
+          </div>
+
+          <!-- Insert Record Section -->
+          <div class="section" id="insert">
+            <h2>Insert Record</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="insert-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="insert-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="insert-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="insert-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="insert-data">Data (JSON):</label>
+              <textarea
+                id="insert-data"
+                class="form-control"
+                rows="6"
+                placeholder='{"name": "John Doe", "age": 30, "email": "john@example.com"}'
+              ></textarea>
+            </div>
+            <button class="btn btn-success" onclick="insertRecord()">
+              Insert Record
+            </button>
+            <div
+              class="response-area"
+              id="insert-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="insert-json"></div>
+            </div>
+          </div>
+
+          <!-- Bulk Insert Section -->
+          <div class="section" id="bulk-insert">
+            <h2>Bulk Insert Records</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bulk-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="bulk-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="bulk-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="bulk-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="bulk-data">Data (JSON Array):</label>
+              <textarea
+                id="bulk-data"
+                class="form-control"
+                rows="8"
+                placeholder='[{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]'
+              ></textarea>
+            </div>
+            <button class="btn btn-success" onclick="bulkInsert()">
+              Bulk Insert
+            </button>
+            <div class="response-area" id="bulk-response" style="display: none">
+              <h4>Response:</h4>
+              <div class="json-display" id="bulk-json"></div>
+            </div>
+          </div>
+
+          <!-- Find Record Section -->
+          <div class="section" id="find">
+            <h2>Find Record</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="find-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="find-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="find-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="find-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="find-id">Record ID:</label>
+              <input
+                type="text"
+                id="find-id"
+                class="form-control"
+                placeholder="Enter record ID"
+              />
+            </div>
+            <button class="btn btn-primary" onclick="findRecord()">
+              Find Record
+            </button>
+            <div class="response-area" id="find-response" style="display: none">
+              <h4>Response:</h4>
+              <div class="json-display" id="find-json"></div>
+            </div>
+          </div>
+
+          <!-- Update Record Section -->
+          <div class="section" id="update">
+            <h2>Update Record</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="update-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="update-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="update-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="update-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="update-id">Record ID:</label>
+              <input
+                type="text"
+                id="update-id"
+                class="form-control"
+                placeholder="Enter record ID"
+              />
+            </div>
+            <div class="form-group">
+              <label for="update-data">Update Data (JSON):</label>
+              <textarea
+                id="update-data"
+                class="form-control"
+                rows="6"
+                placeholder='{"name": "Updated Name", "age": 31}'
+              ></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="updateRecord()">
+              Update Record
+            </button>
+            <div
+              class="response-area"
+              id="update-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="update-json"></div>
+            </div>
+          </div>
+
+          <!-- Delete Record Section -->
+          <div class="section" id="delete">
+            <h2>Delete Record</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="delete-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="delete-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="delete-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="delete-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="delete-id">Record ID:</label>
+              <input
+                type="text"
+                id="delete-id"
+                class="form-control"
+                placeholder="Enter record ID"
+              />
+            </div>
+            <button class="btn btn-danger" onclick="deleteRecord()">
+              Delete Record
+            </button>
+            <div
+              class="response-area"
+              id="delete-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="delete-json"></div>
+            </div>
+          </div>
+
+          <!-- Count Records Section -->
+          <div class="section" id="count">
+            <h2>Count Records</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="count-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="count-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="count-table">Table Name:</label>
+                <input
+                  type="text"
+                  id="count-table"
+                  class="form-control"
+                  placeholder="Enter table name"
+                />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="countRecords()">
+              Count Records
+            </button>
+            <div
+              class="response-area"
+              id="count-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="count-json"></div>
+            </div>
+          </div>
+
+          <!-- Statistics Section -->
+          <div class="section" id="stats">
+            <h2>Database Statistics</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="stats-database">Database Name:</label>
+                <input
+                  type="text"
+                  id="stats-database"
+                  class="form-control"
+                  placeholder="Enter database name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="stats-table">Table Name (optional):</label>
+                <input
+                  type="text"
+                  id="stats-table"
+                  class="form-control"
+                  placeholder="Enter table name (optional)"
+                />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="getStats()">
+              Get Statistics
+            </button>
+            <div
+              class="response-area"
+              id="stats-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="stats-json"></div>
+            </div>
+          </div>
+
+          <!-- API Info Section -->
+          <div class="section" id="api-info">
+            <h2>API Information</h2>
+            <button class="btn btn-primary" onclick="getApiInfo()">
+              Get API Info
+            </button>
+            <div
+              class="response-area"
+              id="api-info-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="api-info-json"></div>
+            </div>
+          </div>
+
+          <!-- CORS Configuration Section -->
+          <div class="section" id="cors">
+            <h2>CORS Configuration</h2>
+            <p>
+              View the current Cross-Origin Resource Sharing (CORS)
+              configuration for the API.
+            </p>
+            <button class="btn btn-primary" onclick="getCorsConfig()">
+              Get CORS Config
+            </button>
+            <div class="response-area" id="cors-response" style="display: none">
+              <h4>Response:</h4>
+              <div class="json-display" id="cors-json"></div>
+            </div>
+          </div>
+
+          <!-- Metrics Section -->
+          <div class="section" id="metrics">
+            <h2>System Metrics</h2>
+            <button class="btn btn-primary" onclick="getMetrics()">
+              Get Metrics
+            </button>
+            <div
+              class="response-area"
+              id="metrics-response"
+              style="display: none"
+            >
+              <h4>Response:</h4>
+              <div class="json-display" id="metrics-json"></div>
+            </div>
+          </div>
         </div>
-
-        <div class="main-content">
-            <div class="sidebar">
-                <div class="nav-section">
-                    <h3>Database Operations</h3>
-                    <a class="nav-item active" data-section="health">Health Check</a>
-                    <a class="nav-item" data-section="tables">Tables</a>
-                    <a class="nav-item" data-section="data">Data Operations</a>
-                    <a class="nav-item" data-section="stats">Statistics</a>
-                </div>
-
-                <div class="nav-section">
-                    <h3>Table Management</h3>
-                    <a class="nav-item" data-section="create-table">Create Table</a>
-                    <a class="nav-item" data-section="list-tables">List Tables</a>
-                    <a class="nav-item" data-section="table-schema">Table Schema</a>
-                </div>
-
-                <div class="nav-section">
-                    <h3>Data Operations</h3>
-                    <a class="nav-item" data-section="insert">Insert Record</a>
-                    <a class="nav-item" data-section="bulk-insert">Bulk Insert</a>
-                    <a class="nav-item" data-section="find">Find Record</a>
-                    <a class="nav-item" data-section="update">Update Record</a>
-                    <a class="nav-item" data-section="delete">Delete Record</a>
-                    <a class="nav-item" data-section="count">Count Records</a>
-                </div>
-
-                <div class="nav-section">
-                    <h3>System</h3>
-                    <a class="nav-item" data-section="api-info">API Info</a>
-                    <a class="nav-item" data-section="cors">CORS Config</a>
-                    <a class="nav-item" data-section="metrics">Metrics</a>
-                </div>
-            </div>
-
-            <div class="content-area">
-                <!-- Health Check Section -->
-                <div class="section active" id="health">
-                    <h2>Health Check</h2>
-                    <p>Check the health and status of the BinDB server.</p>
-                    <button class="btn btn-primary" onclick="checkHealth()">Check Health</button>
-                    <div class="response-area" id="health-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="health-json"></div>
-                    </div>
-                </div>
-
-                <!-- Create Table Section -->
-                <div class="section" id="create-table">
-                    <h2>Create Table</h2>
-                    <div class="form-group">
-                        <label for="create-database">Database Name:</label>
-                        <input type="text" id="create-database" class="form-control" placeholder="Enter database name">
-                    </div>
-                    <div class="form-group">
-                        <label for="create-table-name">Table Name:</label>
-                        <input type="text" id="create-table-name" class="form-control" placeholder="Enter table name">
-                    </div>
-                    <div class="form-group">
-                        <label>Schema Definition:</label>
-                        <div class="schema-builder">
-                            <div id="schema-fields"></div>
-                            <button class="add-field" onclick="addSchemaField()">Add Field</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-success" onclick="createTable()">Create Table</button>
-                    <div class="response-area" id="create-table-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="create-table-json"></div>
-                    </div>
-                </div>
-
-                <!-- List Tables Section -->
-                <div class="section" id="list-tables">
-                    <h2>List Tables</h2>
-                    <div class="form-group">
-                        <label for="list-database">Database Name:</label>
-                        <input type="text" id="list-database" class="form-control" placeholder="Enter database name">
-                    </div>
-                    <button class="btn btn-primary" onclick="listTables()">List Tables</button>
-                    <div class="response-area" id="list-tables-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="list-tables-json"></div>
-                    </div>
-                </div>
-
-                <!-- Table Schema Section -->
-                <div class="section" id="table-schema">
-                    <h2>Get Table Schema</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="schema-database">Database Name:</label>
-                            <input type="text" id="schema-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="schema-table">Table Name:</label>
-                            <input type="text" id="schema-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="getTableSchema()">Get Schema</button>
-                    <div class="response-area" id="schema-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="schema-json"></div>
-                    </div>
-                </div>
-
-                <!-- Insert Record Section -->
-                <div class="section" id="insert">
-                    <h2>Insert Record</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="insert-database">Database Name:</label>
-                            <input type="text" id="insert-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="insert-table">Table Name:</label>
-                            <input type="text" id="insert-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="insert-data">Data (JSON):</label>
-                        <textarea id="insert-data" class="form-control" rows="6" placeholder='{"name": "John Doe", "age": 30, "email": "john@example.com"}'></textarea>
-                    </div>
-                    <button class="btn btn-success" onclick="insertRecord()">Insert Record</button>
-                    <div class="response-area" id="insert-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="insert-json"></div>
-                    </div>
-                </div>
-
-                <!-- Bulk Insert Section -->
-                <div class="section" id="bulk-insert">
-                    <h2>Bulk Insert Records</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="bulk-database">Database Name:</label>
-                            <input type="text" id="bulk-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="bulk-table">Table Name:</label>
-                            <input type="text" id="bulk-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="bulk-data">Data (JSON Array):</label>
-                        <textarea id="bulk-data" class="form-control" rows="8" placeholder='[{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]'></textarea>
-                    </div>
-                    <button class="btn btn-success" onclick="bulkInsert()">Bulk Insert</button>
-                    <div class="response-area" id="bulk-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="bulk-json"></div>
-                    </div>
-                </div>
-
-                <!-- Find Record Section -->
-                <div class="section" id="find">
-                    <h2>Find Record</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="find-database">Database Name:</label>
-                            <input type="text" id="find-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="find-table">Table Name:</label>
-                            <input type="text" id="find-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="find-id">Record ID:</label>
-                        <input type="text" id="find-id" class="form-control" placeholder="Enter record ID">
-                    </div>
-                    <button class="btn btn-primary" onclick="findRecord()">Find Record</button>
-                    <div class="response-area" id="find-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="find-json"></div>
-                    </div>
-                </div>
-
-                <!-- Update Record Section -->
-                <div class="section" id="update">
-                    <h2>Update Record</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="update-database">Database Name:</label>
-                            <input type="text" id="update-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="update-table">Table Name:</label>
-                            <input type="text" id="update-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="update-id">Record ID:</label>
-                        <input type="text" id="update-id" class="form-control" placeholder="Enter record ID">
-                    </div>
-                    <div class="form-group">
-                        <label for="update-data">Update Data (JSON):</label>
-                        <textarea id="update-data" class="form-control" rows="6" placeholder='{"name": "Updated Name", "age": 31}'></textarea>
-                    </div>
-                    <button class="btn btn-primary" onclick="updateRecord()">Update Record</button>
-                    <div class="response-area" id="update-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="update-json"></div>
-                    </div>
-                </div>
-
-                <!-- Delete Record Section -->
-                <div class="section" id="delete">
-                    <h2>Delete Record</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="delete-database">Database Name:</label>
-                            <input type="text" id="delete-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="delete-table">Table Name:</label>
-                            <input type="text" id="delete-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="delete-id">Record ID:</label>
-                        <input type="text" id="delete-id" class="form-control" placeholder="Enter record ID">
-                    </div>
-                    <button class="btn btn-danger" onclick="deleteRecord()">Delete Record</button>
-                    <div class="response-area" id="delete-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="delete-json"></div>
-                    </div>
-                </div>
-
-                <!-- Count Records Section -->
-                <div class="section" id="count">
-                    <h2>Count Records</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="count-database">Database Name:</label>
-                            <input type="text" id="count-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="count-table">Table Name:</label>
-                            <input type="text" id="count-table" class="form-control" placeholder="Enter table name">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="countRecords()">Count Records</button>
-                    <div class="response-area" id="count-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="count-json"></div>
-                    </div>
-                </div>
-
-                <!-- Statistics Section -->
-                <div class="section" id="stats">
-                    <h2>Database Statistics</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="stats-database">Database Name:</label>
-                            <input type="text" id="stats-database" class="form-control" placeholder="Enter database name">
-                        </div>
-                        <div class="form-group">
-                            <label for="stats-table">Table Name (optional):</label>
-                            <input type="text" id="stats-table" class="form-control" placeholder="Enter table name (optional)">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="getStats()">Get Statistics</button>
-                    <div class="response-area" id="stats-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="stats-json"></div>
-                    </div>
-                </div>
-
-                <!-- API Info Section -->
-                <div class="section" id="api-info">
-                    <h2>API Information</h2>
-                    <button class="btn btn-primary" onclick="getApiInfo()">Get API Info</button>
-                    <div class="response-area" id="api-info-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="api-info-json"></div>
-                    </div>
-                </div>
-
-                <!-- CORS Configuration Section -->
-                <div class="section" id="cors">
-                    <h2>CORS Configuration</h2>
-                    <p>View the current Cross-Origin Resource Sharing (CORS) configuration for the API.</p>
-                    <button class="btn btn-primary" onclick="getCorsConfig()">Get CORS Config</button>
-                    <div class="response-area" id="cors-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="cors-json"></div>
-                    </div>
-                </div>
-
-                <!-- Metrics Section -->
-                <div class="section" id="metrics">
-                    <h2>System Metrics</h2>
-                    <button class="btn btn-primary" onclick="getMetrics()">Get Metrics</button>
-                    <div class="response-area" id="metrics-response" style="display: none;">
-                        <h4>Response:</h4>
-                        <div class="json-display" id="metrics-json"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
     <script>
-        // Global variables
-        let currentSection = 'health';
-        const API_BASE = '/v1';
+      // Global variables
+      let currentSection = 'health';
+      const API_BASE = '/v1';
 
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const section = this.getAttribute('data-section');
-                showSection(section);
-            });
+      // Navigation
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function () {
+          const section = this.getAttribute('data-section');
+          showSection(section);
+        });
+      });
+
+      function showSection(sectionName) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => {
+          section.classList.remove('active');
         });
 
-        function showSection(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Remove active class from all nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Show selected section
-            document.getElementById(sectionName).classList.add('active');
-            
-            // Add active class to nav item
-            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
-            
-            currentSection = sectionName;
+        // Remove active class from all nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.classList.remove('active');
+        });
+
+        // Show selected section
+        document.getElementById(sectionName).classList.add('active');
+
+        // Add active class to nav item
+        document
+          .querySelector(`[data-section="${sectionName}"]`)
+          .classList.add('active');
+
+        currentSection = sectionName;
+      }
+
+      // API Functions
+      async function apiCall(endpoint, method = 'GET', data = null) {
+        const options = {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+
+        if (data) {
+          options.body = JSON.stringify(data);
         }
 
-        // API Functions
-        async function apiCall(endpoint, method = 'GET', data = null) {
-            const options = {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            };
+        try {
+          const response = await fetch(`${API_BASE}${endpoint}`, options);
+          const result = await response.json();
+          return { success: true, data: result };
+        } catch (error) {
+          return { success: false, error: error.message };
+        }
+      }
 
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
+      function showResponse(responseId, data, isError = false) {
+        const responseArea = document.getElementById(responseId);
+        const jsonDisplay = document.getElementById(
+          responseId.replace('-response', '-json')
+        );
 
-            try {
-                const response = await fetch(`${API_BASE}${endpoint}`, options);
-                const result = await response.json();
-                return { success: true, data: result };
-            } catch (error) {
-                return { success: false, error: error.message };
-            }
+        responseArea.style.display = 'block';
+
+        if (isError) {
+          jsonDisplay.className = 'error';
+          jsonDisplay.textContent = `Error: ${data}`;
+        } else {
+          jsonDisplay.className = 'json-display';
+          jsonDisplay.textContent = JSON.stringify(data, null, 2);
+        }
+      }
+
+      // Health Check
+      async function checkHealth() {
+        const result = await apiCall('/health');
+        if (result.success) {
+          showResponse('health-response', result.data);
+          updateHealthStatus(result.data);
+        } else {
+          showResponse('health-response', result.error, true);
+        }
+      }
+
+      function updateHealthStatus(healthData) {
+        const indicator = document.getElementById('health-indicator');
+        const status = document.getElementById('health-status');
+        const uptime = document.getElementById('uptime');
+
+        if (healthData.status === 'healthy') {
+          indicator.style.background = '#28a745';
+          status.textContent = 'Healthy';
+        } else {
+          indicator.style.background = '#dc3545';
+          status.textContent = 'Unhealthy';
         }
 
-        function showResponse(responseId, data, isError = false) {
-            const responseArea = document.getElementById(responseId);
-            const jsonDisplay = document.getElementById(responseId.replace('-response', '-json'));
-            
-            responseArea.style.display = 'block';
-            
-            if (isError) {
-                jsonDisplay.className = 'error';
-                jsonDisplay.textContent = `Error: ${data}`;
-            } else {
-                jsonDisplay.className = 'json-display';
-                jsonDisplay.textContent = JSON.stringify(data, null, 2);
-            }
+        if (healthData.uptime) {
+          const uptimeSeconds = Math.floor(healthData.uptime / 1000);
+          const hours = Math.floor(uptimeSeconds / 3600);
+          const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+          const seconds = uptimeSeconds % 60;
+          uptime.textContent = `${hours}h ${minutes}m ${seconds}s`;
         }
+      }
 
-        // Health Check
-        async function checkHealth() {
-            const result = await apiCall('/health');
-            if (result.success) {
-                showResponse('health-response', result.data);
-                updateHealthStatus(result.data);
-            } else {
-                showResponse('health-response', result.error, true);
-            }
-        }
-
-        function updateHealthStatus(healthData) {
-            const indicator = document.getElementById('health-indicator');
-            const status = document.getElementById('health-status');
-            const uptime = document.getElementById('uptime');
-
-            if (healthData.status === 'healthy') {
-                indicator.style.background = '#28a745';
-                status.textContent = 'Healthy';
-            } else {
-                indicator.style.background = '#dc3545';
-                status.textContent = 'Unhealthy';
-            }
-
-            if (healthData.uptime) {
-                const uptimeSeconds = Math.floor(healthData.uptime / 1000);
-                const hours = Math.floor(uptimeSeconds / 3600);
-                const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-                const seconds = uptimeSeconds % 60;
-                uptime.textContent = `${hours}h ${minutes}m ${seconds}s`;
-            }
-        }
-
-        // Schema Builder
-        function addSchemaField() {
-            const fieldsContainer = document.getElementById('schema-fields');
-            const fieldDiv = document.createElement('div');
-            fieldDiv.className = 'schema-field';
-            fieldDiv.innerHTML = `
+      // Schema Builder
+      function addSchemaField() {
+        const fieldsContainer = document.getElementById('schema-fields');
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'schema-field';
+        fieldDiv.innerHTML = `
                 <input type="text" placeholder="Field name" class="field-name">
                 <select class="field-type">
                     <option value="string">String</option>
@@ -830,302 +1043,346 @@
                 <input type="text" placeholder="Default" class="field-default">
                 <button type="button" class="remove-field" onclick="removeSchemaField(this)">Remove</button>
             `;
-            fieldsContainer.appendChild(fieldDiv);
-        }
+        fieldsContainer.appendChild(fieldDiv);
+      }
 
-        function removeSchemaField(button) {
-            button.parentElement.remove();
-        }
+      function removeSchemaField(button) {
+        button.parentElement.remove();
+      }
 
-        function getSchemaFields() {
-            const fields = [];
-            document.querySelectorAll('.schema-field').forEach(field => {
-                const name = field.querySelector('.field-name').value;
-                const type = field.querySelector('.field-type').value;
-                const length = field.querySelector('.field-length').value;
-                const defaultValue = field.querySelector('.field-default').value;
+      function getSchemaFields() {
+        const fields = [];
+        document.querySelectorAll('.schema-field').forEach(field => {
+          const name = field.querySelector('.field-name').value;
+          const type = field.querySelector('.field-type').value;
+          const length = field.querySelector('.field-length').value;
+          const defaultValue = field.querySelector('.field-default').value;
 
-                if (name) {
-                    const fieldDef = {
-                        name: name,
-                        type: type
-                    };
+          if (name) {
+            const fieldDef = {
+              name: name,
+              type: type,
+            };
 
-                    if (length) fieldDef.length = parseInt(length);
-                    if (defaultValue) fieldDef.default = defaultValue;
+            if (length) fieldDef.length = parseInt(length);
+            if (defaultValue) fieldDef.default = defaultValue;
 
-                    fields.push(fieldDef);
-                }
-            });
-            return fields;
-        }
-
-        // Table Operations
-        async function createTable() {
-            const database = document.getElementById('create-database').value;
-            const table = document.getElementById('create-table-name').value;
-            const schema = getSchemaFields();
-
-            if (!database || !table || schema.length === 0) {
-                showResponse('create-table-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            const result = await apiCall('/table/create', 'POST', {
-                database: database,
-                table: table,
-                schema: schema
-            });
-
-            if (result.success) {
-                showResponse('create-table-response', result.data);
-            } else {
-                showResponse('create-table-response', result.error, true);
-            }
-        }
-
-        async function listTables() {
-            const database = document.getElementById('list-database').value;
-            if (!database) {
-                showResponse('list-tables-response', 'Please enter a database name', true);
-                return;
-            }
-
-            const result = await apiCall(`/table/list?database=${encodeURIComponent(database)}`);
-            if (result.success) {
-                showResponse('list-tables-response', result.data);
-            } else {
-                showResponse('list-tables-response', result.error, true);
-            }
-        }
-
-        async function getTableSchema() {
-            const database = document.getElementById('schema-database').value;
-            const table = document.getElementById('schema-table').value;
-
-            if (!database || !table) {
-                showResponse('schema-response', 'Please enter both database and table names', true);
-                return;
-            }
-
-            const result = await apiCall(`/table/schema?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`);
-            if (result.success) {
-                showResponse('schema-response', result.data);
-            } else {
-                showResponse('schema-response', result.error, true);
-            }
-        }
-
-        // Data Operations
-        async function insertRecord() {
-            const database = document.getElementById('insert-database').value;
-            const table = document.getElementById('insert-table').value;
-            const dataText = document.getElementById('insert-data').value;
-
-            if (!database || !table || !dataText) {
-                showResponse('insert-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            try {
-                const data = JSON.parse(dataText);
-                const result = await apiCall('/insert', 'POST', {
-                    database: database,
-                    table: table,
-                    data: data
-                });
-
-                if (result.success) {
-                    showResponse('insert-response', result.data);
-                } else {
-                    showResponse('insert-response', result.error, true);
-                }
-            } catch (error) {
-                showResponse('insert-response', 'Invalid JSON data', true);
-            }
-        }
-
-        async function bulkInsert() {
-            const database = document.getElementById('bulk-database').value;
-            const table = document.getElementById('bulk-table').value;
-            const dataText = document.getElementById('bulk-data').value;
-
-            if (!database || !table || !dataText) {
-                showResponse('bulk-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            try {
-                const data = JSON.parse(dataText);
-                if (!Array.isArray(data)) {
-                    showResponse('bulk-response', 'Data must be an array', true);
-                    return;
-                }
-
-                const result = await apiCall('/bulkInsert', 'POST', {
-                    database: database,
-                    table: table,
-                    data: data
-                });
-
-                if (result.success) {
-                    showResponse('bulk-response', result.data);
-                } else {
-                    showResponse('bulk-response', result.error, true);
-                }
-            } catch (error) {
-                showResponse('bulk-response', 'Invalid JSON data', true);
-            }
-        }
-
-        async function findRecord() {
-            const database = document.getElementById('find-database').value;
-            const table = document.getElementById('find-table').value;
-            const id = document.getElementById('find-id').value;
-
-            if (!database || !table || !id) {
-                showResponse('find-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            const result = await apiCall(`/find?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}&id=${encodeURIComponent(id)}`);
-            if (result.success) {
-                showResponse('find-response', result.data);
-            } else {
-                showResponse('find-response', result.error, true);
-            }
-        }
-
-        async function updateRecord() {
-            const database = document.getElementById('update-database').value;
-            const table = document.getElementById('update-table').value;
-            const id = document.getElementById('update-id').value;
-            const dataText = document.getElementById('update-data').value;
-
-            if (!database || !table || !id || !dataText) {
-                showResponse('update-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            try {
-                const data = JSON.parse(dataText);
-                const result = await apiCall('/update', 'PUT', {
-                    database: database,
-                    table: table,
-                    id: id,
-                    data: data
-                });
-
-                if (result.success) {
-                    showResponse('update-response', result.data);
-                } else {
-                    showResponse('update-response', result.error, true);
-                }
-            } catch (error) {
-                showResponse('update-response', 'Invalid JSON data', true);
-            }
-        }
-
-        async function deleteRecord() {
-            const database = document.getElementById('delete-database').value;
-            const table = document.getElementById('delete-table').value;
-            const id = document.getElementById('delete-id').value;
-
-            if (!database || !table || !id) {
-                showResponse('delete-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            const result = await apiCall('/delete', 'DELETE', {
-                database: database,
-                table: table,
-                id: id
-            });
-
-            if (result.success) {
-                showResponse('delete-response', result.data);
-            } else {
-                showResponse('delete-response', result.error, true);
-            }
-        }
-
-        async function countRecords() {
-            const database = document.getElementById('count-database').value;
-            const table = document.getElementById('count-table').value;
-
-            if (!database || !table) {
-                showResponse('count-response', 'Please fill in all required fields', true);
-                return;
-            }
-
-            const result = await apiCall(`/count?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`);
-            if (result.success) {
-                showResponse('count-response', result.data);
-            } else {
-                showResponse('count-response', result.error, true);
-            }
-        }
-
-        async function getStats() {
-            const database = document.getElementById('stats-database').value;
-            const table = document.getElementById('stats-table').value;
-
-            if (!database) {
-                showResponse('stats-response', 'Please enter a database name', true);
-                return;
-            }
-
-            let endpoint = `/stats?database=${encodeURIComponent(database)}`;
-            if (table) {
-                endpoint += `&table=${encodeURIComponent(table)}`;
-            }
-
-            const result = await apiCall(endpoint);
-            if (result.success) {
-                showResponse('stats-response', result.data);
-            } else {
-                showResponse('stats-response', result.error, true);
-            }
-        }
-
-        async function getApiInfo() {
-            const result = await apiCall('/info');
-            if (result.success) {
-                showResponse('api-info-response', result.data);
-            } else {
-                showResponse('api-info-response', result.error, true);
-            }
-        }
-
-        async function getCorsConfig() {
-            const result = await apiCall('/cors');
-            if (result.success) {
-                showResponse('cors-response', result.data);
-            } else {
-                showResponse('cors-response', result.error, true);
-            }
-        }
-
-        async function getMetrics() {
-            const result = await apiCall('/metrics');
-            if (result.success) {
-                showResponse('metrics-response', result.data);
-            } else {
-                showResponse('metrics-response', result.error, true);
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add initial schema field
-            addSchemaField();
-            
-            // Check health on load
-            checkHealth();
-            
-            // Auto-refresh health every 30 seconds
-            setInterval(checkHealth, 30000);
+            fields.push(fieldDef);
+          }
         });
+        return fields;
+      }
+
+      // Table Operations
+      async function createTable() {
+        const database = document.getElementById('create-database').value;
+        const table = document.getElementById('create-table-name').value;
+        const schema = getSchemaFields();
+
+        if (!database || !table || schema.length === 0) {
+          showResponse(
+            'create-table-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        const result = await apiCall('/table/create', 'POST', {
+          database: database,
+          table: table,
+          schema: schema,
+        });
+
+        if (result.success) {
+          showResponse('create-table-response', result.data);
+        } else {
+          showResponse('create-table-response', result.error, true);
+        }
+      }
+
+      async function listTables() {
+        const database = document.getElementById('list-database').value;
+        if (!database) {
+          showResponse(
+            'list-tables-response',
+            'Please enter a database name',
+            true
+          );
+          return;
+        }
+
+        const result = await apiCall(
+          `/table/list?database=${encodeURIComponent(database)}`
+        );
+        if (result.success) {
+          showResponse('list-tables-response', result.data);
+        } else {
+          showResponse('list-tables-response', result.error, true);
+        }
+      }
+
+      async function getTableSchema() {
+        const database = document.getElementById('schema-database').value;
+        const table = document.getElementById('schema-table').value;
+
+        if (!database || !table) {
+          showResponse(
+            'schema-response',
+            'Please enter both database and table names',
+            true
+          );
+          return;
+        }
+
+        const result = await apiCall(
+          `/table/schema?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`
+        );
+        if (result.success) {
+          showResponse('schema-response', result.data);
+        } else {
+          showResponse('schema-response', result.error, true);
+        }
+      }
+
+      // Data Operations
+      async function insertRecord() {
+        const database = document.getElementById('insert-database').value;
+        const table = document.getElementById('insert-table').value;
+        const dataText = document.getElementById('insert-data').value;
+
+        if (!database || !table || !dataText) {
+          showResponse(
+            'insert-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        try {
+          const data = JSON.parse(dataText);
+          const result = await apiCall('/insert', 'POST', {
+            database: database,
+            table: table,
+            data: data,
+          });
+
+          if (result.success) {
+            showResponse('insert-response', result.data);
+          } else {
+            showResponse('insert-response', result.error, true);
+          }
+        } catch (error) {
+          showResponse('insert-response', 'Invalid JSON data', true);
+        }
+      }
+
+      async function bulkInsert() {
+        const database = document.getElementById('bulk-database').value;
+        const table = document.getElementById('bulk-table').value;
+        const dataText = document.getElementById('bulk-data').value;
+
+        if (!database || !table || !dataText) {
+          showResponse(
+            'bulk-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        try {
+          const data = JSON.parse(dataText);
+          if (!Array.isArray(data)) {
+            showResponse('bulk-response', 'Data must be an array', true);
+            return;
+          }
+
+          const result = await apiCall('/bulkInsert', 'POST', {
+            database: database,
+            table: table,
+            data: data,
+          });
+
+          if (result.success) {
+            showResponse('bulk-response', result.data);
+          } else {
+            showResponse('bulk-response', result.error, true);
+          }
+        } catch (error) {
+          showResponse('bulk-response', 'Invalid JSON data', true);
+        }
+      }
+
+      async function findRecord() {
+        const database = document.getElementById('find-database').value;
+        const table = document.getElementById('find-table').value;
+        const id = document.getElementById('find-id').value;
+
+        if (!database || !table || !id) {
+          showResponse(
+            'find-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        const result = await apiCall(
+          `/find?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}&id=${encodeURIComponent(id)}`
+        );
+        if (result.success) {
+          showResponse('find-response', result.data);
+        } else {
+          showResponse('find-response', result.error, true);
+        }
+      }
+
+      async function updateRecord() {
+        const database = document.getElementById('update-database').value;
+        const table = document.getElementById('update-table').value;
+        const id = document.getElementById('update-id').value;
+        const dataText = document.getElementById('update-data').value;
+
+        if (!database || !table || !id || !dataText) {
+          showResponse(
+            'update-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        try {
+          const data = JSON.parse(dataText);
+          const result = await apiCall('/update', 'PUT', {
+            database: database,
+            table: table,
+            id: id,
+            data: data,
+          });
+
+          if (result.success) {
+            showResponse('update-response', result.data);
+          } else {
+            showResponse('update-response', result.error, true);
+          }
+        } catch (error) {
+          showResponse('update-response', 'Invalid JSON data', true);
+        }
+      }
+
+      async function deleteRecord() {
+        const database = document.getElementById('delete-database').value;
+        const table = document.getElementById('delete-table').value;
+        const id = document.getElementById('delete-id').value;
+
+        if (!database || !table || !id) {
+          showResponse(
+            'delete-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        const result = await apiCall('/delete', 'DELETE', {
+          database: database,
+          table: table,
+          id: id,
+        });
+
+        if (result.success) {
+          showResponse('delete-response', result.data);
+        } else {
+          showResponse('delete-response', result.error, true);
+        }
+      }
+
+      async function countRecords() {
+        const database = document.getElementById('count-database').value;
+        const table = document.getElementById('count-table').value;
+
+        if (!database || !table) {
+          showResponse(
+            'count-response',
+            'Please fill in all required fields',
+            true
+          );
+          return;
+        }
+
+        const result = await apiCall(
+          `/count?database=${encodeURIComponent(database)}&table=${encodeURIComponent(table)}`
+        );
+        if (result.success) {
+          showResponse('count-response', result.data);
+        } else {
+          showResponse('count-response', result.error, true);
+        }
+      }
+
+      async function getStats() {
+        const database = document.getElementById('stats-database').value;
+        const table = document.getElementById('stats-table').value;
+
+        if (!database) {
+          showResponse('stats-response', 'Please enter a database name', true);
+          return;
+        }
+
+        let endpoint = `/stats?database=${encodeURIComponent(database)}`;
+        if (table) {
+          endpoint += `&table=${encodeURIComponent(table)}`;
+        }
+
+        const result = await apiCall(endpoint);
+        if (result.success) {
+          showResponse('stats-response', result.data);
+        } else {
+          showResponse('stats-response', result.error, true);
+        }
+      }
+
+      async function getApiInfo() {
+        const result = await apiCall('/info');
+        if (result.success) {
+          showResponse('api-info-response', result.data);
+        } else {
+          showResponse('api-info-response', result.error, true);
+        }
+      }
+
+      async function getCorsConfig() {
+        const result = await apiCall('/cors');
+        if (result.success) {
+          showResponse('cors-response', result.data);
+        } else {
+          showResponse('cors-response', result.error, true);
+        }
+      }
+
+      async function getMetrics() {
+        const result = await apiCall('/metrics');
+        if (result.success) {
+          showResponse('metrics-response', result.data);
+        } else {
+          showResponse('metrics-response', result.error, true);
+        }
+      }
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', function () {
+        // Add initial schema field
+        addSchemaField();
+
+        // Check health on load
+        checkHealth();
+
+        // Auto-refresh health every 30 seconds
+        setInterval(checkHealth, 30000);
+      });
     </script>
-</body>
+  </body>
 </html>

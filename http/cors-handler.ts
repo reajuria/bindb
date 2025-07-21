@@ -10,7 +10,14 @@ export class CORSHandler {
   constructor(options: CORSConfig = {}) {
     this.config = {
       origin: options.origin || '*',
-      methods: options.methods || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      methods: options.methods || [
+        'GET',
+        'POST',
+        'PUT',
+        'DELETE',
+        'PATCH',
+        'OPTIONS',
+      ],
       allowedHeaders: options.allowedHeaders || [
         'Content-Type',
         'Authorization',
