@@ -24,7 +24,6 @@ README.md
 .prettierignore
 jest.config.*
 jest.setup.js
-tsconfig.json
 
 # IDE files
 .vscode
