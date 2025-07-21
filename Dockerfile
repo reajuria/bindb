@@ -35,6 +35,9 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy admin.html to the app directory
+COPY --from=builder /app/admin.html ./admin.html
+
 # Change ownership to nodejs user
 RUN chown -R nodejs:nodejs /app
 
