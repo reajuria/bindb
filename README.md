@@ -20,29 +20,20 @@ npm test
 
 ## ☁️ Deploy to Cloud Run
 
-BinDB is production-ready and can be deployed to Google Cloud Run with zero configuration:
+BinDB is production-ready and can be deployed to Google Cloud Run with a single click:
+
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
 
 ### One-Click Deployment
 
-```bash
-# Deploy to Cloud Run (requires gcloud CLI)
-npm run deploy:cloud-run
+Simply click the button above to deploy BinDB to Google Cloud Run. The Cloud Run Button will:
 
-# Or use Cloud Build for automated CI/CD
-npm run deploy:build
-```
+1. **Detect the Dockerfile** and build the container automatically
+2. **Deploy to Cloud Run** with optimal settings
+3. **Provide a public URL** for your BinDB instance
+4. **Handle all configuration** automatically
 
-### Manual Deployment
-
-```bash
-# Build and deploy manually
-./deploy.sh
-
-# Or set custom configuration
-PROJECT_ID=your-project-id SERVICE_NAME=bindb REGION=us-central1 ./deploy.sh
-```
-
-### Docker Deployment
+### Local Docker Testing
 
 ```bash
 # Build Docker image
@@ -51,7 +42,7 @@ npm run docker:build
 # Run locally with Docker
 npm run docker:run
 
-# Deploy to any container platform
+# Or manually
 docker build -t bindb .
 docker run -p 8080:8080 bindb
 ```
@@ -157,7 +148,7 @@ The project is configured for GitHub Actions with:
 - **Multi-version testing**: Node.js 18.x, 20.x, 22.x
 - **Jest-powered testing**: Unit + E2E + Performance tests with coverage
 - **Automated benchmarking**: Performance regression detection
-- **Cloud Build integration**: Automated deployment to Cloud Run
+- **Cloud Run Button**: One-click deployment to Google Cloud Run
 
 ### CI Configuration
 Modern Jest-based testing with comprehensive coverage:
@@ -166,21 +157,19 @@ Modern Jest-based testing with comprehensive coverage:
   run: npm run test:ci
 - name: Run quick benchmarks
   run: npm run benchmark:quick
-- name: Deploy to Cloud Run
-  run: npm run deploy:build
 ```
 
 ## 🏆 Production Ready
 
 - ✅ Zero TypeScript compilation errors
-- ✅ 100% test pass rate (62/62 tests)
+- ✅ 100% test pass rate (90/90 tests)
 - ✅ Jest-powered testing with coverage reporting
 - ✅ Performance benchmarking with regression detection
 - ✅ Complete type coverage
 - ✅ CI/CD integration with automated quality gates
 - ✅ High-performance architecture (100k+ ops/sec)
 - ✅ Enterprise-grade patterns and scalability
-- ✅ Cloud Run deployment ready
+- ✅ Cloud Run Button deployment ready
 - ✅ Docker containerization
 - ✅ Health monitoring and auto-scaling
 

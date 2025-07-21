@@ -24,9 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docker:build": "docker build -t bindb .",
-    "docker:run": "docker run -p 8080:8080 bindb",
-    "deploy:cloud-run": "./deploy.sh",
-    "deploy:build": "gcloud builds submit --config cloudbuild.yaml"
+    "docker:run": "docker run -p 8080:8080 bindb"
   },
   "keywords": [],
   "author": "",
