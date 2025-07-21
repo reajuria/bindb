@@ -366,7 +366,7 @@ export class EngineAPI {
    */
   private registerUtilityRoutes(app: App): void {
     // Admin interface
-    app.get('/admin', async _req => {
+    app.get('/v1/admin', async _req => {
       try {
         const fs = await import('fs/promises');
         const path = await import('path');
@@ -376,7 +376,7 @@ export class EngineAPI {
         return {
           statusCode: 200,
           headers: {
-            'Content-Type': 'text/html',
+            'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'no-cache',
           },
           body: adminHtml,
