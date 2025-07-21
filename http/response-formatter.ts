@@ -21,7 +21,7 @@ export class ResponseFormatter {
       if (this.isHttpResponse(result)) {
         return result;
       }
-      
+
       return this.createJsonResponse(result, origin);
     }
 
@@ -38,7 +38,9 @@ export class ResponseFormatter {
       typeof obj === 'object' &&
       typeof obj.statusCode === 'number' &&
       (obj.headers === undefined || typeof obj.headers === 'object') &&
-      (obj.body === undefined || typeof obj.body === 'string' || Buffer.isBuffer(obj.body))
+      (obj.body === undefined ||
+        typeof obj.body === 'string' ||
+        Buffer.isBuffer(obj.body))
     );
   }
 
