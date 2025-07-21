@@ -18,6 +18,67 @@ npm start
 npm test
 ```
 
+## ☁️ Deploy to Cloud Run
+
+BinDB is production-ready and can be deployed to Google Cloud Run with zero configuration:
+
+### One-Click Deployment
+
+```bash
+# Deploy to Cloud Run (requires gcloud CLI)
+npm run deploy:cloud-run
+
+# Or use Cloud Build for automated CI/CD
+npm run deploy:build
+```
+
+### Manual Deployment
+
+```bash
+# Build and deploy manually
+./deploy.sh
+
+# Or set custom configuration
+PROJECT_ID=your-project-id SERVICE_NAME=bindb REGION=us-central1 ./deploy.sh
+```
+
+### Docker Deployment
+
+```bash
+# Build Docker image
+npm run docker:build
+
+# Run locally with Docker
+npm run docker:run
+
+# Deploy to any container platform
+docker build -t bindb .
+docker run -p 8080:8080 bindb
+```
+
+### Cloud Run Features
+
+- **Auto-scaling**: 0-10 instances based on demand
+- **Pay-per-use**: Only pay for actual usage
+- **Global CDN**: Fast response times worldwide
+- **Built-in security**: HTTPS, authentication, and isolation
+- **Health monitoring**: Automatic health checks and recovery
+- **Zero downtime**: Rolling updates with zero interruption
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | Server port (Cloud Run sets this automatically) |
+| `NODE_ENV` | `production` | Environment mode |
+
+### API Endpoints
+
+Once deployed, your BinDB instance will be available at:
+- **Health Check**: `https://your-service-url/v1/health`
+- **API Base**: `https://your-service-url/v1/`
+- **Documentation**: `https://your-service-url/v1/docs`
+
 ## 🧪 Testing
 
 Comprehensive Jest-based testing with coverage reporting and performance benchmarking:
@@ -66,6 +127,11 @@ npm run typecheck
 
 # Clean build artifacts
 npm run clean
+
+# Code quality
+npm run lint
+npm run lint:fix
+npm run format
 ```
 
 ## 📊 Architecture
@@ -83,6 +149,7 @@ npm run clean
 - 🌐 **Full REST API**: Complete CRUD operations with type validation
 - 🧪 **Comprehensive Testing**: 100% test coverage with CI integration
 - 📚 **Pure TypeScript**: Zero JavaScript legacy code
+- ☁️ **Cloud Native**: Ready for containerized deployment
 
 ## 🔧 CI/CD
 
@@ -90,7 +157,7 @@ The project is configured for GitHub Actions with:
 - **Multi-version testing**: Node.js 18.x, 20.x, 22.x
 - **Jest-powered testing**: Unit + E2E + Performance tests with coverage
 - **Automated benchmarking**: Performance regression detection
-- **Zero-config deployment**: Ready for production environments
+- **Cloud Build integration**: Automated deployment to Cloud Run
 
 ### CI Configuration
 Modern Jest-based testing with comprehensive coverage:
@@ -99,17 +166,9 @@ Modern Jest-based testing with comprehensive coverage:
   run: npm run test:ci
 - name: Run quick benchmarks
   run: npm run benchmark:quick
+- name: Deploy to Cloud Run
+  run: npm run deploy:build
 ```
-
-## 🎯 TypeScript Migration
-
-This project represents a complete JavaScript-to-TypeScript migration showcasing:
-- **Enterprise-grade type patterns**
-- **Advanced TypeScript features**
-- **Production-ready architecture**
-- **Complete CI/CD integration**
-
-For detailed migration information, see [TYPESCRIPT_MIGRATION.md](./TYPESCRIPT_MIGRATION.md).
 
 ## 🏆 Production Ready
 
@@ -121,5 +180,8 @@ For detailed migration information, see [TYPESCRIPT_MIGRATION.md](./TYPESCRIPT_M
 - ✅ CI/CD integration with automated quality gates
 - ✅ High-performance architecture (100k+ ops/sec)
 - ✅ Enterprise-grade patterns and scalability
+- ✅ Cloud Run deployment ready
+- ✅ Docker containerization
+- ✅ Health monitoring and auto-scaling
 
 Built with ❤️, TypeScript, and Jest for maximum reliability, performance, and developer experience.

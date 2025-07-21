@@ -1,0 +1,50 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/bindb:$COMMIT_SHA', '.']
+  
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/bindb:$COMMIT_SHA']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'bindb'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/bindb:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--min-instances'
+      - '0'
+      - '--timeout'
+      - '300'
+      - '--concurrency'
+      - '80'
+      - '--set-env-vars'
+      - 'NODE_ENV=production'
+
+# Store images in Google Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/bindb:$COMMIT_SHA'
+
+# Build timeout
+timeout: '1200s'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -28,7 +28,7 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testTimeout: process.env.CI ? 60000 : 30000,
   verbose: true,
-  maxWorkers: process.env.CI ? 1 : undefined,
+  maxWorkers: process.env.CI ? 1 : '50%',
   forceExit: true,
   detectOpenHandles: true,
   // Additional CI stability settings
