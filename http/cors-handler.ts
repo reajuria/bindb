@@ -10,12 +10,21 @@ export class CORSHandler {
   constructor(options: CORSConfig = {}) {
     this.config = {
       origin: options.origin || '*',
-      methods: options.methods || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      methods: options.methods || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: options.allowedHeaders || [
         'Content-Type',
         'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+        'Cache-Control',
+        'X-File-Name',
       ],
-      exposedHeaders: options.exposedHeaders || [],
+      exposedHeaders: options.exposedHeaders || [
+        'Content-Length',
+        'X-Requested-With',
+        'X-Total-Count',
+      ],
       credentials: options.credentials || false,
       maxAge: options.maxAge || 86400, // 24 hours
     };

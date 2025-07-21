@@ -72,6 +72,7 @@ export class EngineAPI {
   private config: EngineAPIConfig;
   private requestCount: number = 0;
   private startTime: number = Date.now();
+  private app: App | null = null;
 
   constructor(options: EngineAPIConfig = {}) {
     this.config = {
@@ -89,6 +90,8 @@ export class EngineAPI {
    * Register Engine API routes with the app
    */
   registerRoutes(app: App): void {
+    this.app = app;
+    
     // Core database operations
     this.registerTableRoutes(app);
     this.registerDataRoutes(app);
@@ -437,6 +440,7 @@ export class EngineAPI {
           'GET /v1/metrics',
           'GET /v1/health',
           'GET /v1/info',
+          'GET /v1/cors',
         ],
         features: [
           'Type-safe database operations',
@@ -444,7 +448,18 @@ export class EngineAPI {
           'Performance monitoring',
           'Schema validation',
           'Comprehensive error handling',
+          'CORS support',
         ],
+      };
+    });
+
+    // CORS configuration
+    app.get('/v1/cors', async _req => {
+      return {
+        success: true,
+        cors: this.app?.getCORSConfig() || {},
+        description: 'Current CORS configuration for the API',
+        note: 'CORS is enabled by default with permissive settings for development. Configure for production use.',
       };
     });
   }

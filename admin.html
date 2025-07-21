@@ -432,6 +432,7 @@
                 <div class="nav-section">
                     <h3>System</h3>
                     <a class="nav-item" data-section="api-info">API Info</a>
+                    <a class="nav-item" data-section="cors">CORS Config</a>
                     <a class="nav-item" data-section="metrics">Metrics</a>
                 </div>
             </div>
@@ -678,6 +679,17 @@
                     <div class="response-area" id="api-info-response" style="display: none;">
                         <h4>Response:</h4>
                         <div class="json-display" id="api-info-json"></div>
+                    </div>
+                </div>
+
+                <!-- CORS Configuration Section -->
+                <div class="section" id="cors">
+                    <h2>CORS Configuration</h2>
+                    <p>View the current Cross-Origin Resource Sharing (CORS) configuration for the API.</p>
+                    <button class="btn btn-primary" onclick="getCorsConfig()">Get CORS Config</button>
+                    <div class="response-area" id="cors-response" style="display: none;">
+                        <h4>Response:</h4>
+                        <div class="json-display" id="cors-json"></div>
                     </div>
                 </div>
 
@@ -1082,6 +1094,15 @@
                 showResponse('api-info-response', result.data);
             } else {
                 showResponse('api-info-response', result.error, true);
+            }
+        }
+
+        async function getCorsConfig() {
+            const result = await apiCall('/cors');
+            if (result.success) {
+                showResponse('cors-response', result.data);
+            } else {
+                showResponse('cors-response', result.error, true);
             }
         }
 

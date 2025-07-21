@@ -63,12 +63,26 @@ docker run -p 8080:8080 bindb
 | `PORT` | `8080` | Server port (Cloud Run sets this automatically) |
 | `NODE_ENV` | `production` | Environment mode |
 
+### CORS Configuration
+
+BinDB includes comprehensive CORS support for cross-origin requests:
+
+- **Default Settings**: Permissive configuration for development
+- **Supported Methods**: GET, POST, PUT, DELETE, PATCH, OPTIONS
+- **Allowed Headers**: Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, X-File-Name
+- **Exposed Headers**: Content-Length, X-Requested-With, X-Total-Count
+- **Credentials**: Disabled by default (can be enabled for production)
+- **Max Age**: 24 hours for preflight caching
+
+**Production Configuration**: For production deployments, consider restricting origins to specific domains for security.
+
 ### API Endpoints
 
 Once deployed, your BinDB instance will be available at:
 - **Admin Interface**: `https://your-service-url/admin` - Web-based database management
 - **Health Check**: `https://your-service-url/v1/health`
 - **API Base**: `https://your-service-url/v1/`
+- **CORS Config**: `https://your-service-url/v1/cors` - View CORS settings
 - **Documentation**: `https://your-service-url/v1/docs`
 
 ## 🧪 Testing
@@ -164,6 +178,7 @@ open http://localhost:3000/admin
 - ✅ View database statistics
 - ✅ Monitor system health
 - ✅ Access API information
+- ✅ View CORS configuration
 
 ## 📊 Architecture
 
@@ -214,5 +229,6 @@ Modern Jest-based testing with comprehensive coverage:
 - ✅ Health monitoring and auto-scaling
 - ✅ Web-based admin interface
 - ✅ Complete database management UI
+- ✅ Comprehensive CORS support
 
 Built with ❤️, TypeScript, and Jest for maximum reliability, performance, and developer experience.
