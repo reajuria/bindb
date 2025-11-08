@@ -8,6 +8,7 @@ import {
   UINT16_SIZE,
   UNIQUE_IDENTIFIER_SIZE,
 } from './constants';
+import { InvalidColumnTypeError, ValidationError } from './errors';
 import { ensureIdField } from './id-field-manager';
 import type { Schema } from './schema';
 
@@ -79,7 +80,7 @@ export function calculateBufferSchema(schema: Schema): BufferSchema {
   const bufferSchema: Record<string, BufferSchemaColumn> = {};
 
   if (columns.length === 0) {
-    throw new Error('No columns defined for the schema');
+    throw new ValidationError('No columns defined for the schema');
   }
 
   // Ensure ID field exists and has proper default generator
@@ -98,7 +99,11 @@ export function calculateBufferSchema(schema: Schema): BufferSchema {
 
     const handler = columnSizeHandlers[column.type];
     if (!handler) {
-      throw new Error(`Unknown column type: ${column.type}`);
+      throw new InvalidColumnTypeError(
+        column.name,
+        column.type,
+        Object.values(Types)
+      );
     }
 
     position += handler(column, bufferSchema, _database, _table);

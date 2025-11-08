@@ -249,9 +249,23 @@ describe('Simple-api', () => {
       table: 'test',
       data: {},
     });
-    expect(response.status).toBe(200);
-    expect(response.data.error).toBeTruthy();
-    expect(response.data.error.includes('Missing required field')).toBeTruthy();
+    // Should return 400 for missing required fields (validation error)
+    expect(response.status).toBe(400);
+    // Error response should have proper JSON body (not empty)
+    expect(response.data).toBeTruthy();
+    expect(typeof response.data).toBe('object');
+
+    // Should have error details
+    if (typeof response.data === 'object' && 'error' in response.data) {
+      expect(response.data.error).toBeTruthy();
+      expect(
+        String(response.data.error).includes('Missing required field')
+      ).toBeTruthy();
+
+      // Should include statusCode in body for API consistency
+      expect(response.data.statusCode).toBe(400);
+      expect(response.data.code).toBeTruthy();
+    }
   });
 
   it('error handling - nonexistent record', async () => {
@@ -261,13 +275,13 @@ describe('Simple-api', () => {
       'fake-id'
     );
 
-    expect(response.status).toBe(200);
+    // Should return 404 for nonexistent table (with new error types)
+    expect(response.status).toBe(404);
 
-    // Check if it's an error or null record
+    // Should have error information
     if ('error' in response.data && response.data.error) {
-      expect(response.data.error).toBeTruthy(); // Error is expected for nonexistent table
-    } else {
-      expect(response.data.record).toBeNull();
+      expect(response.data.error).toBeTruthy();
+      expect(response.data.error).toContain('not found');
     }
   });
 

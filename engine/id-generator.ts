@@ -1,4 +1,5 @@
 import { UNIQUE_IDENTIFIER_SIZE } from './constants';
+import { ValidationError } from './errors';
 import type { Schema } from './schema';
 import { strHash } from './util';
 
@@ -44,7 +45,7 @@ export function createSchemaIdGenerator(schema: Schema): SchemaIdGenerator {
   const tableHashBuffer = schema.tableHashBuffer;
 
   if (!tableHashBuffer) {
-    throw new Error(
+    throw new ValidationError(
       'Schema must have database and table names set to generate IDs'
     );
   }

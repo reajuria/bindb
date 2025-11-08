@@ -4,6 +4,11 @@ import {
   type BufferSchema,
   type ColumnValue,
 } from './buffer-utils';
+import {
+  BufferError,
+  DeserializationError,
+  InvalidBufferSizeError,
+} from './errors';
 
 /**
  * RowSerializer - Handles row serialization and deserialization to/from binary format
@@ -121,8 +126,10 @@ export function deserializeRow(
 
   // Validate buffer size
   if (buffer.length !== bufferSchema.size) {
-    throw new Error(
-      `Buffer size mismatch. Expected ${bufferSchema.size}, got ${buffer.length}`
+    throw new InvalidBufferSizeError(
+      bufferSchema.size,
+      buffer.length,
+      'deserialization'
     );
   }
 
@@ -136,7 +143,7 @@ export function deserializeRow(
 
   // Validate row flag (error case is rare)
   if (rowFlag !== RowStatus.Active) {
-    throw new Error(`Invalid row flag: ${rowFlag}`);
+    throw new DeserializationError(`Invalid row flag: ${rowFlag}`, buffer);
   }
 
   // Deserialize each column
@@ -182,7 +189,7 @@ export function isActiveRow(buffer: Buffer): boolean {
  */
 export function getRowStatus(buffer: Buffer): RowStatus {
   if (buffer.length === 0) {
-    throw new Error('Cannot get status from empty buffer');
+    throw new BufferError('Cannot get status from empty buffer', 1, 0);
   }
   return buffer.readUInt8(0) as RowStatus;
 }

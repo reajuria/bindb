@@ -31,17 +31,38 @@ export class ResponseFormatter {
 
   /**
    * Check if an object is a pre-formatted HttpResponse
+   * HttpResponse has: statusCode, headers?, body?
+   * Error data objects have: statusCode, error, code, operation, etc.
    */
   private isHttpResponse(obj: any): obj is HttpResponse {
-    return (
-      obj &&
-      typeof obj === 'object' &&
-      typeof obj.statusCode === 'number' &&
-      (obj.headers === undefined || typeof obj.headers === 'object') &&
-      (obj.body === undefined ||
-        typeof obj.body === 'string' ||
-        Buffer.isBuffer(obj.body))
-    );
+    if (!obj || typeof obj !== 'object' || typeof obj.statusCode !== 'number') {
+      return false;
+    }
+
+    // Error data objects have 'error' or 'operation' fields
+    // HttpResponse objects do not
+    if ('error' in obj || 'operation' in obj) {
+      return false;
+    }
+
+    // Check headers field if present
+    if (
+      obj.headers !== undefined &&
+      (typeof obj.headers !== 'object' || obj.headers === null)
+    ) {
+      return false;
+    }
+
+    // Check body field if present
+    if (
+      obj.body !== undefined &&
+      typeof obj.body !== 'string' &&
+      !Buffer.isBuffer(obj.body)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   createEmptyResponse(): HttpResponse {
@@ -66,6 +87,10 @@ export class ResponseFormatter {
   }
 
   createJsonResponse(data: any, _origin: string = '*'): HttpResponse {
+    // Extract statusCode from data if present (for error responses)
+    const statusCode =
+      data && typeof data.statusCode === 'number' ? data.statusCode : 200;
+
     const body = JSON.stringify(data, null, 2);
 
     return {
@@ -74,7 +99,7 @@ export class ResponseFormatter {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(body, 'utf8').toString(),
       },
-      statusCode: 200,
+      statusCode,
     };
   }
 

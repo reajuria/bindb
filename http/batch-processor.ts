@@ -1,3 +1,5 @@
+import { ValidationError } from '../engine/errors';
+
 /**
  * Batch processing configuration
  */
@@ -84,11 +86,19 @@ export class BatchProcessor {
     options: Partial<BatchConfig> = {}
   ): Promise<BatchProcessingResult<R[]>> {
     if (!Array.isArray(items)) {
-      throw new Error('Items must be an array');
+      throw new ValidationError(
+        'Items must be an array',
+        'items',
+        typeof items
+      );
     }
 
     if (typeof processor !== 'function') {
-      throw new Error('Processor must be a function');
+      throw new ValidationError(
+        'Processor must be a function',
+        'processor',
+        typeof processor
+      );
     }
 
     if (items.length === 0) {

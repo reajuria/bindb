@@ -1,3 +1,4 @@
+import { BinDBError } from '../engine/errors';
 import type { RowData } from '../engine/row';
 import type { BinDBSchemaField } from './type-mapper';
 
@@ -117,6 +118,9 @@ export interface ErrorResponse extends BaseResponse {
   error: string;
   success: false;
   code?: string | number;
+  statusCode?: number;
+  timestamp?: string;
+  errorMetadata?: Record<string, any>;
   stack?: string[];
 }
 
@@ -491,7 +495,17 @@ export class ResultFormatter {
       success: false,
     };
 
-    if ('code' in error && error.code) {
+    // Handle BinDBError with enhanced information
+    if (BinDBError.isBinDBError(error)) {
+      response.code = error.code;
+      response.statusCode = error.statusCode;
+
+      if (error.metadata && Object.keys(error.metadata).length > 0) {
+        response.errorMetadata = error.metadata;
+      }
+
+      response.timestamp = error.timestamp;
+    } else if ('code' in error && error.code) {
       response.code = error.code as string | number;
     }
 

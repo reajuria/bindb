@@ -1,6 +1,7 @@
 import type { Stats } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { StorageError } from './errors';
 import { FileManager, type WriteOperation } from './file-manager';
 import { parseBufferSchema, type BufferSchema } from './row';
 import { Schema } from './schema';
@@ -82,7 +83,11 @@ export class TableStorageManager {
    */
   getSchema(): Schema {
     if (!this.schema) {
-      throw new Error('Schema not loaded. Call loadSchema() first.');
+      throw new StorageError(
+        'Schema not loaded. Call loadSchema() first.',
+        'getSchema',
+        this.schemaFilePath
+      );
     }
     return this.schema;
   }
@@ -92,7 +97,11 @@ export class TableStorageManager {
    */
   getBufferSchema(): BufferSchema {
     if (!this.bufferSchema) {
-      throw new Error('Buffer schema not loaded. Call loadSchema() first.');
+      throw new StorageError(
+        'Buffer schema not loaded. Call loadSchema() first.',
+        'getBufferSchema',
+        this.schemaFilePath
+      );
     }
     return this.bufferSchema;
   }
@@ -118,7 +127,10 @@ export class TableStorageManager {
    */
   getOffset(slot: number): number {
     if (!this.bufferSchema) {
-      throw new Error('Buffer schema not loaded. Call loadSchema() first.');
+      throw new StorageError(
+        'Buffer schema not loaded. Call loadSchema() first.',
+        'getOffset'
+      );
     }
     return (slot === 0 ? 0 : slot - 1) * this.bufferSchema.size;
   }
@@ -202,7 +214,10 @@ export class TableStorageManager {
    */
   get recordSize(): number {
     if (!this.bufferSchema) {
-      throw new Error('Buffer schema not loaded. Call loadSchema() first.');
+      throw new StorageError(
+        'Buffer schema not loaded. Call loadSchema() first.',
+        'recordSize'
+      );
     }
     return this.bufferSchema.size;
   }

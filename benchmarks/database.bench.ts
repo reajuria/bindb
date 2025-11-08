@@ -228,17 +228,24 @@ describe('Database Performance Benchmarks', () => {
         const endTime = performance.now();
         const insertTime = endTime - startTime;
 
-        // Check file size
-        const dbPath = path.join(testDir, 'benchmark_db', 'documents');
+        // Flush write buffer to ensure all data is written to disk
+        await table.flush();
+
+        // Check file size - files are at database level, not in subdirectory
+        // Schema: benchmark_db/documents.schema.json
+        // Data: benchmark_db/documents.data
+        const dbPath = path.join(testDir, 'benchmark_db');
         let totalSize = 0;
         try {
-          const files = await fs.readdir(dbPath);
-          for (const file of files) {
-            const stats = await fs.stat(path.join(dbPath, file));
-            totalSize += stats.size;
-          }
-        } catch {
-          // Ignore if files don't exist
+          const schemaFile = path.join(dbPath, 'documents.schema.json');
+          const dataFile = path.join(dbPath, 'documents.data');
+
+          const schemaStats = await fs.stat(schemaFile);
+          const dataStats = await fs.stat(dataFile);
+
+          totalSize = schemaStats.size + dataStats.size;
+        } catch (error) {
+          console.log('Error reading file stats:', error);
         }
 
         const avgDocumentSize = totalSize / recordCount;
@@ -252,7 +259,12 @@ describe('Database Performance Benchmarks', () => {
         console.log(`  Insert Time: ${insertTime.toFixed(2)}ms`);
 
         // Storage efficiency assertions (relaxed for CI environments)
-        const maxDocSize = process.env.CI ? 8000 : 5000;
+        // Each document allocates fixed buffer size based on schema:
+        // - title: 200 chars × 4 bytes = 802 bytes
+        // - content: 2000 chars × 4 bytes = 8002 bytes
+        // - tags: 500 chars × 4 bytes = 2002 bytes
+        // - Plus ID (12), status (1), null flags (3) = ~10,820 bytes per record
+        const maxDocSize = process.env.CI ? 12000 : 11000;
         const maxInsertTime = process.env.CI ? 15000 : 8000;
         expect(avgDocumentSize).toBeLessThan(maxDocSize);
         expect(insertTime).toBeLessThan(maxInsertTime);

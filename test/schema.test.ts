@@ -39,12 +39,12 @@ describe('Schema', () => {
         length: 5,
       };
       schema.addColumn(duplicateColumn);
-    }).toThrow(/already exists/);
+    }).toThrow(/Duplicate key/);
 
     // Test invalid type
     expect(() => {
       const invalidColumn = { name: 'other', type: 'Nope' as any };
       schema.addColumn(invalidColumn);
-    }).toThrow(/Invalid type/);
+    }).toThrow(/Invalid column type/);
   });
 });
