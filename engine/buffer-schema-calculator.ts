@@ -102,7 +102,7 @@ export function calculateBufferSchema(schema: Schema): BufferSchema {
       throw new InvalidColumnTypeError(
         column.name,
         column.type,
-        Object.keys(Types)
+        Object.values(Types)
       );
     }
 

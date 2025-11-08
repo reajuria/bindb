@@ -543,12 +543,29 @@ export class EngineAPI {
   private handleError(error: Error, operation: string): any {
     console.error(`API Error in ${operation}:`, error.message);
 
-    return {
+    const response: any = {
       success: false,
       error: error.message,
       operation,
       timestamp: new Date().toISOString(),
     };
+
+    // Check if error is a BinDBError and extract HTTP status code
+    if ('statusCode' in error && typeof error.statusCode === 'number') {
+      response.statusCode = error.statusCode;
+    }
+
+    // Include error code if available
+    if ('code' in error && error.code) {
+      response.code = error.code;
+    }
+
+    // Include metadata if available
+    if ('metadata' in error && error.metadata) {
+      response.errorMetadata = error.metadata;
+    }
+
+    return response;
   }
 
   /**

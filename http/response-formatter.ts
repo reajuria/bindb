@@ -66,6 +66,10 @@ export class ResponseFormatter {
   }
 
   createJsonResponse(data: any, _origin: string = '*'): HttpResponse {
+    // Extract statusCode from data if present (for error responses)
+    const statusCode =
+      data && typeof data.statusCode === 'number' ? data.statusCode : 200;
+
     const body = JSON.stringify(data, null, 2);
 
     return {
@@ -74,7 +78,7 @@ export class ResponseFormatter {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(body, 'utf8').toString(),
       },
-      statusCode: 200,
+      statusCode,
     };
   }
 

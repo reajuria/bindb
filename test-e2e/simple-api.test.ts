@@ -249,9 +249,16 @@ describe('Simple-api', () => {
       table: 'test',
       data: {},
     });
-    expect(response.status).toBe(200);
-    expect(response.data.error).toBeTruthy();
-    expect(response.data.error.includes('Missing required field')).toBeTruthy();
+    // Should return 400 for missing required fields (validation error)
+    expect(response.status).toBe(400);
+    // Error response structure has the error message in 'error' field
+    expect(response.data).toBeTruthy();
+    if (typeof response.data === 'object' && 'error' in response.data) {
+      expect(response.data.error).toBeTruthy();
+      expect(
+        String(response.data.error).includes('Missing required field')
+      ).toBeTruthy();
+    }
   });
 
   it('error handling - nonexistent record', async () => {

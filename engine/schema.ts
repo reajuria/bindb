@@ -70,7 +70,7 @@ export class Schema {
   addColumn(column: ColumnDefinition): void {
     const { name, type, length } = column;
     if (Types[type] === undefined) {
-      throw new InvalidColumnTypeError(name, type, Object.keys(Types));
+      throw new InvalidColumnTypeError(name, type, Object.values(Types));
     }
     if (this._columns.find(col => col.name === name) !== undefined) {
       throw new DuplicateKeyError(name, this._table);

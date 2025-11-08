@@ -188,7 +188,7 @@ export function writeColumn(
 
   const handler = writeHandlers[column.type];
   if (!handler) {
-    throw new InvalidColumnTypeError(key, column.type, Object.keys(Types));
+    throw new InvalidColumnTypeError(key, column.type, Object.values(Types));
   }
 
   handler(buffer, column, value);
@@ -213,7 +213,7 @@ export function readColumn(
 
   const handler = readHandlers[column.type];
   if (!handler) {
-    throw new InvalidColumnTypeError(key, column.type, Object.keys(Types));
+    throw new InvalidColumnTypeError(key, column.type, Object.values(Types));
   }
 
   return handler(buffer, column);
