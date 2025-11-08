@@ -34,7 +34,7 @@ export class BinDBError extends Error {
   public readonly timestamp: string;
   public readonly code: ErrorCode;
   public readonly statusCode: number;
-  public readonly metadata?: Record<string, any>;
+  public readonly metadata: Record<string, any> | undefined;
 
   constructor(
     code: ErrorCode,
