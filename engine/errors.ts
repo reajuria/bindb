@@ -2,6 +2,7 @@
  * Error codes for BinDB operations
  * Categorized by HTTP status code ranges for API consistency
  */
+/* eslint-disable no-unused-vars */
 export enum ErrorCode {
   // Client errors (4xx)
   VALIDATION_ERROR = 'VALIDATION_ERROR',
@@ -23,6 +24,7 @@ export enum ErrorCode {
   BUFFER_OVERFLOW = 'BUFFER_OVERFLOW',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Base error class for all BinDB errors
@@ -30,15 +32,21 @@ export enum ErrorCode {
  */
 export class BinDBError extends Error {
   public readonly timestamp: string;
+  public readonly code: ErrorCode;
+  public readonly statusCode: number;
+  public readonly metadata?: Record<string, any>;
 
   constructor(
-    public readonly code: ErrorCode,
+    code: ErrorCode,
     message: string,
-    public readonly statusCode: number = 500,
-    public readonly metadata?: Record<string, any>
+    statusCode: number = 500,
+    metadata?: Record<string, any>
   ) {
     super(message);
     this.name = 'BinDBError';
+    this.code = code;
+    this.statusCode = statusCode;
+    this.metadata = metadata;
     this.timestamp = new Date().toISOString();
 
     // Maintains proper stack trace for where our error was thrown

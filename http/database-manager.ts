@@ -1,5 +1,8 @@
 import { Database } from '../engine/database';
-import { MissingRequiredFieldError, TableNotFoundError } from '../engine/errors';
+import {
+  MissingRequiredFieldError,
+  TableNotFoundError,
+} from '../engine/errors';
 import type { RowData } from '../engine/row';
 import { Schema } from '../engine/schema';
 import { BatchProcessor, type BatchConfig } from './batch-processor';
