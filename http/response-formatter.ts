@@ -31,19 +31,38 @@ export class ResponseFormatter {
 
   /**
    * Check if an object is a pre-formatted HttpResponse
-   * A proper HttpResponse must have headers; data objects don't
+   * HttpResponse has: statusCode, headers?, body?
+   * Error data objects have: statusCode, error, code, operation, etc.
    */
   private isHttpResponse(obj: any): obj is HttpResponse {
-    return (
-      obj &&
-      typeof obj === 'object' &&
-      typeof obj.statusCode === 'number' &&
-      typeof obj.headers === 'object' && // Headers are required for HttpResponse
-      obj.headers !== null &&
-      (obj.body === undefined ||
-        typeof obj.body === 'string' ||
-        Buffer.isBuffer(obj.body))
-    );
+    if (!obj || typeof obj !== 'object' || typeof obj.statusCode !== 'number') {
+      return false;
+    }
+
+    // Error data objects have 'error' or 'operation' fields
+    // HttpResponse objects do not
+    if ('error' in obj || 'operation' in obj) {
+      return false;
+    }
+
+    // Check headers field if present
+    if (
+      obj.headers !== undefined &&
+      (typeof obj.headers !== 'object' || obj.headers === null)
+    ) {
+      return false;
+    }
+
+    // Check body field if present
+    if (
+      obj.body !== undefined &&
+      typeof obj.body !== 'string' &&
+      !Buffer.isBuffer(obj.body)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   createEmptyResponse(): HttpResponse {
