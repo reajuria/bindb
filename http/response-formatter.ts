@@ -31,13 +31,15 @@ export class ResponseFormatter {
 
   /**
    * Check if an object is a pre-formatted HttpResponse
+   * A proper HttpResponse must have headers; data objects don't
    */
   private isHttpResponse(obj: any): obj is HttpResponse {
     return (
       obj &&
       typeof obj === 'object' &&
       typeof obj.statusCode === 'number' &&
-      (obj.headers === undefined || typeof obj.headers === 'object') &&
+      typeof obj.headers === 'object' && // Headers are required for HttpResponse
+      obj.headers !== null &&
       (obj.body === undefined ||
         typeof obj.body === 'string' ||
         Buffer.isBuffer(obj.body))

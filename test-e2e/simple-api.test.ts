@@ -251,13 +251,20 @@ describe('Simple-api', () => {
     });
     // Should return 400 for missing required fields (validation error)
     expect(response.status).toBe(400);
-    // Error response structure has the error message in 'error' field
+    // Error response should have proper JSON body (not empty)
     expect(response.data).toBeTruthy();
+    expect(typeof response.data).toBe('object');
+
+    // Should have error details
     if (typeof response.data === 'object' && 'error' in response.data) {
       expect(response.data.error).toBeTruthy();
       expect(
         String(response.data.error).includes('Missing required field')
       ).toBeTruthy();
+
+      // Should include statusCode in body for API consistency
+      expect(response.data.statusCode).toBe(400);
+      expect(response.data.code).toBeTruthy();
     }
   });
 
