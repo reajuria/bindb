@@ -1,3 +1,4 @@
+import { MissingRequiredFieldError, ValidationError } from '../engine/errors';
 import type { App } from './app';
 import {
   DatabaseManager,
@@ -137,7 +138,7 @@ export class EngineAPI {
       try {
         const database = req.query?.database as string;
         if (!database) {
-          throw new Error('Database parameter is required');
+          throw new MissingRequiredFieldError('database', 'listTables');
         }
 
         const db = await this.databaseManager.getDatabase(database);
@@ -163,7 +164,7 @@ export class EngineAPI {
         const table = req.query?.table as string;
 
         if (!database || !table) {
-          throw new Error('Database and table parameters are required');
+          throw new MissingRequiredFieldError('database, table', 'operation');
         }
 
         const db = await this.databaseManager.getDatabase(database);
@@ -215,7 +216,11 @@ export class EngineAPI {
         this.validateRequest(request, ['database', 'table', 'data']);
 
         if (!Array.isArray(request.data)) {
-          throw new Error('Data must be an array for bulk insert');
+          throw new ValidationError(
+            'Data must be an array for bulk insert',
+            'data',
+            typeof request.data
+          );
         }
 
         const result = await this.databaseManager.insertMany(
@@ -240,7 +245,7 @@ export class EngineAPI {
         const id = req.query?.id as string;
 
         if (!database || !table || !id) {
-          throw new Error('Database, table, and id parameters are required');
+          throw new MissingRequiredFieldError('database, table, id', 'find');
         }
 
         const result = await this.databaseManager.findOne(database, table, {
@@ -303,7 +308,7 @@ export class EngineAPI {
         const table = req.query?.table as string;
 
         if (!database || !table) {
-          throw new Error('Database and table parameters are required');
+          throw new MissingRequiredFieldError('database, table', 'operation');
         }
 
         const result = await this.databaseManager.countRecords(database, table);
@@ -327,7 +332,7 @@ export class EngineAPI {
         const table = req.query?.table as string;
 
         if (!database) {
-          throw new Error('Database parameter is required');
+          throw new MissingRequiredFieldError('database', 'getStats');
         }
 
         const result = await this.databaseManager.getStats(database, table);
@@ -475,7 +480,7 @@ export class EngineAPI {
         const table = req.query?.table as string;
 
         if (!database || !table) {
-          throw new Error('Database and table parameters are required');
+          throw new MissingRequiredFieldError('database, table', 'operation');
         }
 
         const db = await this.databaseManager.getDatabase(database);
@@ -502,7 +507,7 @@ export class EngineAPI {
         const table = req.query?.table as string;
 
         if (!database || !table) {
-          throw new Error('Database and table parameters are required');
+          throw new MissingRequiredFieldError('database, table', 'operation');
         }
 
         const db = await this.databaseManager.getDatabase(database);
@@ -527,7 +532,7 @@ export class EngineAPI {
   private validateRequest(request: any, requiredFields: string[]): void {
     for (const field of requiredFields) {
       if (!request || request[field] === undefined || request[field] === null) {
-        throw new Error(`Missing required field: ${field}`);
+        throw new MissingRequiredFieldError(field, 'request validation');
       }
     }
   }

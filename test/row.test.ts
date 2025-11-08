@@ -72,7 +72,7 @@ describe('Row', () => {
 
     expect(() =>
       parseDataRow(bufferSchema, Buffer.alloc(bufferSchema.size - 1))
-    ).toThrow(/Buffer size mismatch/);
+    ).toThrow(/Invalid buffer size/);
 
     const buf: Buffer = Buffer.alloc(bufferSchema.size);
     buf.writeUInt8(0xfe, 0); // invalid flag

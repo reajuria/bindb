@@ -2,6 +2,7 @@ import {
   DatabaseFileManager,
   type DatabaseMetadata,
 } from './database-file-manager';
+import { TableNotFoundError } from './errors';
 import type { Schema } from './schema';
 import { Table } from './table';
 
@@ -141,7 +142,7 @@ export class Database {
   getTable(name: string): Table {
     const table = this.tables.get(name);
     if (!table) {
-      throw new Error(`Table '${name}' not found in database '${this.name}'`);
+      throw new TableNotFoundError(this.name, name);
     }
     return table;
   }

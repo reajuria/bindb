@@ -1,4 +1,5 @@
 import { Database } from '../engine/database';
+import { MissingRequiredFieldError, TableNotFoundError } from '../engine/errors';
 import type { RowData } from '../engine/row';
 import { Schema } from '../engine/schema';
 import { BatchProcessor, type BatchConfig } from './batch-processor';
@@ -198,7 +199,7 @@ export class DatabaseManager {
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
-        throw new Error(`Table '${table}' not found in database '${database}'`);
+        throw new TableNotFoundError(database, table);
       }
 
       const result = await tableInstance.insert(record);
@@ -244,7 +245,7 @@ export class DatabaseManager {
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
-        throw new Error(`Table '${table}' not found in database '${database}'`);
+        throw new TableNotFoundError(database, table);
       }
 
       // Use BatchProcessor for optimal chunking
@@ -286,13 +287,13 @@ export class DatabaseManager {
 
     try {
       if (!filter || !filter.id) {
-        throw new Error('Filter must contain an id field');
+        throw new MissingRequiredFieldError('id', 'filterOperation');
       }
 
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
-        throw new Error(`Table '${table}' not found in database '${database}'`);
+        throw new TableNotFoundError(database, table);
       }
 
       const result = await tableInstance.get(filter.id);
@@ -329,13 +330,13 @@ export class DatabaseManager {
 
     try {
       if (!filter || !filter.id) {
-        throw new Error('Filter must contain an id field');
+        throw new MissingRequiredFieldError('id', 'filterOperation');
       }
 
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
-        throw new Error(`Table '${table}' not found in database '${database}'`);
+        throw new TableNotFoundError(database, table);
       }
 
       const updateData = update.$set || update;
@@ -379,13 +380,13 @@ export class DatabaseManager {
 
     try {
       if (!filter || !filter.id) {
-        throw new Error('Filter must contain an id field');
+        throw new MissingRequiredFieldError('id', 'deleteOne');
       }
 
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
-        throw new Error(`Table '${table}' not found in database '${database}'`);
+        throw new TableNotFoundError(database, table);
       }
 
       const deleted = await tableInstance.delete(filter.id);
@@ -421,7 +422,7 @@ export class DatabaseManager {
       const db = await this.getDatabase(database);
       const tableInstance = db.table(table);
       if (!tableInstance) {
-        throw new Error(`Table '${table}' not found in database '${database}'`);
+        throw new TableNotFoundError(database, table);
       }
 
       // Use table stats for efficient counting
@@ -457,9 +458,7 @@ export class DatabaseManager {
       if (table) {
         const tableInstance = db.table(table);
         if (!tableInstance) {
-          throw new Error(
-            `Table '${table}' not found in database '${database}'`
-          );
+          throw new TableNotFoundError(database, table);
         }
 
         const tableStats = tableInstance.getStats();

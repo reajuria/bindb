@@ -1,4 +1,5 @@
 import { Types, type ColumnDefinition } from './column';
+import { DuplicateKeyError, InvalidColumnTypeError } from './errors';
 import { strHash } from './util';
 
 // Re-export for external use
@@ -69,10 +70,10 @@ export class Schema {
   addColumn(column: ColumnDefinition): void {
     const { name, type, length } = column;
     if (Types[type] === undefined) {
-      throw new Error(`Invalid type ${type}`);
+      throw new InvalidColumnTypeError(name, type, Object.keys(Types));
     }
     if (this._columns.find(col => col.name === name) !== undefined) {
-      throw new Error(`Column ${name} already exists`);
+      throw new DuplicateKeyError(name, this._table);
     }
 
     this._columns.push({

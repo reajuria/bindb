@@ -1,4 +1,9 @@
 import { Types } from '../engine/column';
+import {
+  InvalidColumnTypeError,
+  MissingRequiredFieldError,
+  ValidationError,
+} from '../engine/errors';
 
 /**
  * External schema field definition
@@ -129,7 +134,7 @@ export class TypeMapper {
    */
   convertSchema(externalSchema: ExternalSchema): BinDBSchemaField[] {
     if (!Array.isArray(externalSchema)) {
-      throw new Error('Schema must be an array');
+      throw new ValidationError('Schema must be an array', 'schema');
     }
 
     return externalSchema.map(field => this.convertFieldDefinition(field));
@@ -140,11 +145,11 @@ export class TypeMapper {
    */
   convertFieldDefinition(field: ExternalSchemaField): BinDBSchemaField {
     if (!field || typeof field !== 'object') {
-      throw new Error('Field definition must be an object');
+      throw new ValidationError('Field definition must be an object', 'field');
     }
 
     if (!field.name) {
-      throw new Error('Field definition must have a name');
+      throw new MissingRequiredFieldError('name', 'field definition');
     }
 
     return {
@@ -162,7 +167,11 @@ export class TypeMapper {
    */
   addTypeMapping(externalType: string, bindbType: string): void {
     if (!Object.values(Types).includes(bindbType as any)) {
-      throw new Error(`Invalid BinDB type: ${bindbType}`);
+      throw new InvalidColumnTypeError(
+        externalType,
+        bindbType,
+        Object.values(Types)
+      );
     }
 
     this.typeMap[externalType.toLowerCase().trim()] = bindbType;

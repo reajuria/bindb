@@ -1,5 +1,6 @@
 import { Types } from './column';
 import { DOUBLE_SIZE, UINT16_SIZE, UNIQUE_IDENTIFIER_SIZE } from './constants';
+import { InvalidColumnTypeError } from './errors';
 
 /**
  * Buffer schema column definition
@@ -187,7 +188,7 @@ export function writeColumn(
 
   const handler = writeHandlers[column.type];
   if (!handler) {
-    throw new Error(`Unknown column type: ${column.type}`);
+    throw new InvalidColumnTypeError(key, column.type, Object.keys(Types));
   }
 
   handler(buffer, column, value);
@@ -212,7 +213,7 @@ export function readColumn(
 
   const handler = readHandlers[column.type];
   if (!handler) {
-    throw new Error(`Unknown column type: ${column.type}`);
+    throw new InvalidColumnTypeError(key, column.type, Object.keys(Types));
   }
 
   return handler(buffer, column);
