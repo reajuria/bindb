@@ -12,6 +12,7 @@ import { SlotManager, type SlotData, type SlotStats } from './slot-manager';
 import { TableCacheManager, type TableCacheStats } from './table-cache-manager';
 import { TableMetrics, type ComprehensiveStats } from './table-metrics';
 import { TableStorageManager } from './table-storage-manager';
+import { logger } from '../logging/index';
 
 /**
  * Bulk insert write operation
@@ -110,9 +111,12 @@ export class Table {
     // Load slot data into slot manager
     this.slotManager.loadSlots(slotData);
 
-    console.log(
-      `Loaded ${this.name} with ${this.slotManager.getStats().activeSlots} rows`
-    );
+    logger.info(`Table loaded: ${this.database.name}.${this.name}`, {
+      database: this.database.name,
+      table: this.name,
+      activeSlots: this.slotManager.getStats().activeSlots,
+      totalSlots: slot
+    });
   }
 
   /**
