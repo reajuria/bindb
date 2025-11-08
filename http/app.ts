@@ -4,6 +4,12 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http';
+import {
+  createRequestContext,
+  getRequestDuration,
+  logger,
+  runWithContext,
+} from '../logging/index';
 import { CORSHandler } from './cors-handler';
 import { RequestParser } from './request-parser';
 import { ResponseFormatter } from './response-formatter';
@@ -16,7 +22,6 @@ import type {
   Route,
   RouteHandler,
 } from './types';
-import { logger, createRequestContext, runWithContext, getRequestDuration } from '../logging/index';
 
 /**
  * App - HTTP server framework with routing capabilities
@@ -53,13 +58,16 @@ export class App {
       await runWithContext(requestContext, async () => {
         try {
           // Log incoming request
-          logger.info(`Incoming request: ${req.method} ${requestContext.path}`, {
-            correlationId: requestContext.correlationId,
-            requestId: requestContext.requestId,
-            method: req.method,
-            path: requestContext.path,
-            clientIp: requestContext.clientIp,
-          });
+          logger.info(
+            `Incoming request: ${req.method} ${requestContext.path}`,
+            {
+              correlationId: requestContext.correlationId,
+              requestId: requestContext.requestId,
+              method: req.method,
+              path: requestContext.path,
+              clientIp: requestContext.clientIp,
+            }
+          );
 
           await this._handleRequest(req, res);
         } catch (_error) {
@@ -147,7 +155,11 @@ export class App {
         _error.message
       );
     } else {
-      logger.error('Internal server error during request processing', { errorName: _error.name }, _error);
+      logger.error(
+        'Internal server error during request processing',
+        { errorName: _error.name },
+        _error
+      );
       _errorResponse = this.responseFormatter.createInternalErrorResponse();
     }
 

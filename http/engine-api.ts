@@ -1,11 +1,11 @@
 import { MissingRequiredFieldError, ValidationError } from '../engine/errors';
+import { getLoggingContext, logger } from '../logging/index';
 import type { App } from './app';
 import {
   DatabaseManager,
   type DatabaseManagerOptions,
 } from './database-manager';
 import type { ExternalSchema } from './type-mapper';
-import { logger, getLoggingContext } from '../logging/index';
 
 /**
  * API request types
@@ -543,12 +543,16 @@ export class EngineAPI {
    */
   private handleError(error: Error, operation: string): any {
     // Log error with context
-    logger.error(`API error in ${operation}`, {
-      ...getLoggingContext(),
-      operation,
-      errorName: error.name,
-      errorCode: (error as any).code,
-    }, error);
+    logger.error(
+      `API error in ${operation}`,
+      {
+        ...getLoggingContext(),
+        operation,
+        errorName: error.name,
+        errorCode: (error as any).code,
+      },
+      error
+    );
 
     const response: any = {
       success: false,

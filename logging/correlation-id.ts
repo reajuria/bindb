@@ -45,7 +45,8 @@ export function generateRequestId(): string {
  */
 export function extractCorrelationId(req: IncomingMessage): string {
   // Check for existing correlation ID in headers
-  const headerValue = req.headers['x-correlation-id'] || req.headers['x-request-id'];
+  const headerValue =
+    req.headers['x-correlation-id'] || req.headers['x-request-id'];
 
   if (typeof headerValue === 'string' && headerValue.length > 0) {
     return headerValue;
@@ -79,7 +80,10 @@ export function extractClientIp(req: IncomingMessage): string | undefined {
  * Create request context from HTTP request
  */
 export function createRequestContext(req: IncomingMessage): RequestContext {
-  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  const url = new URL(
+    req.url || '/',
+    `http://${req.headers.host || 'localhost'}`
+  );
   const clientIp = extractClientIp(req);
 
   const context: RequestContext = {

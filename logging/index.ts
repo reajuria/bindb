@@ -4,34 +4,23 @@
  * Export all logging functionality
  */
 
-export {
-  LogLevel,
-  Timer,
-  logger,
-  createLogger,
-} from './logger';
+export { LogLevel, Timer, createLogger, logger } from './logger';
 
-export type {
-  LogContext,
-  LogEntry,
-  LoggerConfig,
-} from './logger';
+export type { LogContext, LogEntry, LoggerConfig } from './logger';
 
 export {
+  createRequestContext,
+  extractClientIp,
+  extractCorrelationId,
   generateCorrelationId,
   generateRequestId,
-  extractCorrelationId,
-  extractClientIp,
-  createRequestContext,
-  runWithContext,
   getContext,
   getCorrelationId,
+  getLoggingContext,
+  getRequestDuration,
   getRequestId,
   getRequestStartTime,
-  getRequestDuration,
-  getLoggingContext,
+  runWithContext,
 } from './correlation-id';
 
-export type {
-  RequestContext,
-} from './correlation-id';
+export type { RequestContext } from './correlation-id';

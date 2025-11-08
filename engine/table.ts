@@ -1,3 +1,4 @@
+import { logger } from '../logging/index';
 import { readColumn, type BufferSchema } from './buffer-utils';
 import { ID_FIELD } from './constants';
 import {
@@ -12,7 +13,6 @@ import { SlotManager, type SlotData, type SlotStats } from './slot-manager';
 import { TableCacheManager, type TableCacheStats } from './table-cache-manager';
 import { TableMetrics, type ComprehensiveStats } from './table-metrics';
 import { TableStorageManager } from './table-storage-manager';
-import { logger } from '../logging/index';
 
 /**
  * Bulk insert write operation
@@ -115,7 +115,7 @@ export class Table {
       database: this.database.name,
       table: this.name,
       activeSlots: this.slotManager.getStats().activeSlots,
-      totalSlots: slot
+      totalSlots: slot,
     });
   }
 

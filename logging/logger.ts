@@ -10,12 +10,14 @@
  * - Environment-aware configuration
  */
 
+/* eslint-disable no-unused-vars */
 export enum LogLevel {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
   WARN = 'WARN',
   ERROR = 'ERROR',
 }
+/* eslint-enable no-unused-vars */
 
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   [LogLevel.DEBUG]: 0,
@@ -68,7 +70,9 @@ class Logger {
     const isProduction = nodeEnv === 'production';
 
     this.config = {
-      minLevel: this.parseLogLevel(process.env.LOG_LEVEL) || (isProduction ? LogLevel.INFO : LogLevel.DEBUG),
+      minLevel:
+        this.parseLogLevel(process.env.LOG_LEVEL) ||
+        (isProduction ? LogLevel.INFO : LogLevel.DEBUG),
       prettyPrint: !isProduction,
       includeStackTrace: !isProduction,
       maxMessageLength: 10000,
@@ -84,14 +88,18 @@ class Logger {
   private parseLogLevel(level?: string): LogLevel | undefined {
     if (!level) return undefined;
     const upper = level.toUpperCase();
-    return Object.values(LogLevel).includes(upper as LogLevel) ? (upper as LogLevel) : undefined;
+    return Object.values(LogLevel).includes(upper as LogLevel)
+      ? (upper as LogLevel)
+      : undefined;
   }
 
   /**
    * Check if a log level should be logged based on configuration
    */
   private shouldLog(level: LogLevel): boolean {
-    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.config.minLevel];
+    return (
+      LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.config.minLevel]
+    );
   }
 
   /**
@@ -104,7 +112,12 @@ class Logger {
   /**
    * Format and write log entry
    */
-  private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: LogContext,
+    error?: Error
+  ): void {
     if (!this.shouldLog(level)) {
       return;
     }
@@ -136,8 +149,13 @@ class Logger {
    * Truncate message if too long
    */
   private truncateMessage(message: string): string {
-    if (this.config.maxMessageLength && message.length > this.config.maxMessageLength) {
-      return message.substring(0, this.config.maxMessageLength) + '... (truncated)';
+    if (
+      this.config.maxMessageLength &&
+      message.length > this.config.maxMessageLength
+    ) {
+      return (
+        message.substring(0, this.config.maxMessageLength) + '... (truncated)'
+      );
     }
     return message;
   }
@@ -146,7 +164,9 @@ class Logger {
    * Write log entry to output
    */
   private write(entry: LogEntry): void {
-    const output = this.config.prettyPrint ? this.prettyFormat(entry) : JSON.stringify(entry);
+    const output = this.config.prettyPrint
+      ? this.prettyFormat(entry)
+      : JSON.stringify(entry);
 
     // Use appropriate console method based on level
     switch (entry.level) {
@@ -165,10 +185,7 @@ class Logger {
    * Format log entry for human readability
    */
   private prettyFormat(entry: LogEntry): string {
-    const parts: string[] = [
-      `[${entry.timestamp}]`,
-      `[${entry.level}]`,
-    ];
+    const parts: string[] = [`[${entry.timestamp}]`, `[${entry.level}]`];
 
     if (entry.context?.correlationId) {
       parts.push(`[${entry.context.correlationId}]`);
@@ -257,14 +274,29 @@ class Logger {
    * Log HTTP request
    */
   logRequest(method: string, path: string, context?: LogContext): void {
-    this.info(`${method} ${path}`, { ...context, requestMethod: method, requestPath: path });
+    this.info(`${method} ${path}`, {
+      ...context,
+      requestMethod: method,
+      requestPath: path,
+    });
   }
 
   /**
    * Log HTTP response
    */
-  logResponse(method: string, path: string, statusCode: number, duration: number, context?: LogContext): void {
-    const level = statusCode >= 500 ? LogLevel.ERROR : statusCode >= 400 ? LogLevel.WARN : LogLevel.INFO;
+  logResponse(
+    method: string,
+    path: string,
+    statusCode: number,
+    duration: number,
+    context?: LogContext
+  ): void {
+    const level =
+      statusCode >= 500
+        ? LogLevel.ERROR
+        : statusCode >= 400
+          ? LogLevel.WARN
+          : LogLevel.INFO;
     const message = `${method} ${path} ${statusCode}`;
 
     const logContext = {
@@ -285,8 +317,16 @@ class Logger {
   /**
    * Log database operation
    */
-  logDatabaseOperation(operation: string, tableName: string, context?: LogContext): void {
-    this.debug(`Database operation: ${operation}`, { ...context, operation, tableName });
+  logDatabaseOperation(
+    operation: string,
+    tableName: string,
+    context?: LogContext
+  ): void {
+    this.debug(`Database operation: ${operation}`, {
+      ...context,
+      operation,
+      tableName,
+    });
   }
 
   /**
@@ -345,6 +385,9 @@ export const logger = new Logger();
 /**
  * Create a child logger with context
  */
-export function createLogger(context?: LogContext, config?: Partial<LoggerConfig>): Logger {
+export function createLogger(
+  context?: LogContext,
+  config?: Partial<LoggerConfig>
+): Logger {
   return new Logger(config, context);
 }

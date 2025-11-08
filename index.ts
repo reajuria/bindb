@@ -39,7 +39,7 @@ logger.info('Starting BinDB server', {
   port,
   nodeEnv: process.env.NODE_ENV || 'development',
   nodeVersion: process.version,
-  storagePath: process.env.BINDB_STORAGE_PATH || './data'
+  storagePath: process.env.BINDB_STORAGE_PATH || './data',
 });
 
 app.listen(port, () => {

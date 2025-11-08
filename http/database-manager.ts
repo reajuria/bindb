@@ -5,6 +5,7 @@ import {
 } from '../engine/errors';
 import type { RowData } from '../engine/row';
 import { Schema } from '../engine/schema';
+import { getLoggingContext, logger } from '../logging/index';
 import { BatchProcessor, type BatchConfig } from './batch-processor';
 import {
   ResultFormatter,
@@ -16,7 +17,6 @@ import {
   type ExternalSchema,
   type SchemaValidationResult,
 } from './type-mapper';
-import { logger, getLoggingContext } from '../logging/index';
 
 /**
  * Database manager configuration options
@@ -128,10 +128,17 @@ export class DatabaseManager {
    */
   async getDatabase(name: string): Promise<Database> {
     if (!this.databases.has(name)) {
-      logger.debug(`Creating new database: ${name}`, { ...getLoggingContext(), database: name, storagePath: this.storagePath });
+      logger.debug(`Creating new database: ${name}`, {
+        ...getLoggingContext(),
+        database: name,
+        storagePath: this.storagePath,
+      });
       const database = await Database.create(this.storagePath, name);
       this.databases.set(name, database);
-      logger.info(`Database created successfully: ${name}`, { ...getLoggingContext(), database: name });
+      logger.info(`Database created successfully: ${name}`, {
+        ...getLoggingContext(),
+        database: name,
+      });
     }
     return this.databases.get(name)!;
   }
@@ -147,7 +154,12 @@ export class DatabaseManager {
     const startTime = performance.now();
 
     try {
-      logger.debug(`Creating table: ${database}.${table}`, { ...getLoggingContext(), database, table, columnCount: Object.keys(schema).length });
+      logger.debug(`Creating table: ${database}.${table}`, {
+        ...getLoggingContext(),
+        database,
+        table,
+        columnCount: Object.keys(schema).length,
+      });
 
       // Validate and convert schema using TypeMapper
       const validationResult: SchemaValidationResult =
@@ -170,7 +182,12 @@ export class DatabaseManager {
       await db.createTable(table, tableSchema);
 
       const duration = performance.now() - startTime;
-      logger.info(`Table created successfully: ${database}.${table}`, { ...getLoggingContext(), database, table, duration });
+      logger.info(`Table created successfully: ${database}.${table}`, {
+        ...getLoggingContext(),
+        database,
+        table,
+        duration,
+      });
 
       const result = {
         database,
@@ -186,7 +203,11 @@ export class DatabaseManager {
         endTime: performance.now(),
       });
     } catch (error) {
-      logger.error(`Failed to create table: ${database}.${table}`, { ...getLoggingContext(), database, table }, error as Error);
+      logger.error(
+        `Failed to create table: ${database}.${table}`,
+        { ...getLoggingContext(), database, table },
+        error as Error
+      );
       return this.resultFormatter.formatError(error as Error, {
         operation: 'createTable',
         database,
@@ -244,7 +265,12 @@ export class DatabaseManager {
     const startTime = performance.now();
 
     try {
-      logger.debug(`Bulk insert started: ${database}.${table}`, { ...getLoggingContext(), database, table, recordCount: records.length });
+      logger.debug(`Bulk insert started: ${database}.${table}`, {
+        ...getLoggingContext(),
+        database,
+        table,
+        recordCount: records.length,
+      });
 
       if (!Array.isArray(records) || records.length === 0) {
         const result: RowData[] = [];
@@ -275,7 +301,7 @@ export class DatabaseManager {
         table,
         recordCount: records.length,
         duration,
-        batchCount: processingResult.statistics._batchCount
+        batchCount: processingResult.statistics._batchCount,
       });
 
       return this.resultFormatter.formatBulkInsertResult(
@@ -289,7 +315,16 @@ export class DatabaseManager {
         }
       );
     } catch (error) {
-      logger.error(`Bulk insert failed: ${database}.${table}`, { ...getLoggingContext(), database, table, recordCount: records.length }, error as Error);
+      logger.error(
+        `Bulk insert failed: ${database}.${table}`,
+        {
+          ...getLoggingContext(),
+          database,
+          table,
+          recordCount: records.length,
+        },
+        error as Error
+      );
       return this.resultFormatter.formatError(error as Error, {
         operation: 'bulkInsert',
         database,
@@ -567,7 +602,9 @@ export class DatabaseManager {
    * Close all databases and cleanup resources
    */
   async close(): Promise<void> {
-    logger.info('Closing DatabaseManager and all databases', { databaseCount: this.databases.size });
+    logger.info('Closing DatabaseManager and all databases', {
+      databaseCount: this.databases.size,
+    });
     for (const db of this.databases.values()) {
       await db.close();
     }

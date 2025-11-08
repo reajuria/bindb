@@ -2,20 +2,20 @@
  * Tests for centralized logging system
  */
 
+import type { IncomingMessage } from 'http';
 import {
-  logger,
   createLogger,
-  LogLevel,
+  createRequestContext,
   generateCorrelationId,
   generateRequestId,
-  runWithContext,
   getContext,
   getCorrelationId,
-  getRequestId,
   getRequestDuration,
-  createRequestContext,
+  getRequestId,
+  logger,
+  LogLevel,
+  runWithContext,
 } from '../logging/index';
-import type { IncomingMessage } from 'http';
 
 describe('Logger', () => {
   let consoleLogSpy: jest.SpyInstance;
@@ -111,7 +111,7 @@ describe('Logger', () => {
   });
 
   describe('Timer', () => {
-    it('should measure operation duration', (done) => {
+    it('should measure operation duration', done => {
       const timer = logger.timer('Test operation');
       setTimeout(() => {
         const duration = timer.end();
@@ -121,7 +121,7 @@ describe('Logger', () => {
       }, 10);
     });
 
-    it('should get elapsed time without logging', (done) => {
+    it('should get elapsed time without logging', done => {
       const timer = logger.timer('Test operation');
       setTimeout(() => {
         const elapsed = timer.elapsed();
@@ -232,7 +232,7 @@ describe('Request Context', () => {
     });
   });
 
-  it('should calculate request duration', (done) => {
+  it('should calculate request duration', done => {
     const testContext = {
       correlationId: 'test-correlation-id',
       requestId: 'test-request-id',
