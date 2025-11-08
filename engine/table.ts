@@ -1,5 +1,6 @@
 import { readColumn, type BufferSchema } from './buffer-utils';
 import { ID_FIELD } from './constants';
+import { createLogger } from './logger';
 import {
   RowStatus,
   dataRowToBufferWithGenerated,
@@ -41,6 +42,7 @@ export class Table {
   private storageManager: TableStorageManager;
   private cacheManager: TableCacheManager;
   private metrics: TableMetrics;
+  private logger = createLogger('table');
 
   constructor(storageBasePath: string, database: Database, name: string) {
     this.database = database;
@@ -110,9 +112,11 @@ export class Table {
     // Load slot data into slot manager
     this.slotManager.loadSlots(slotData);
 
-    console.log(
-      `Loaded ${this.name} with ${this.slotManager.getStats().activeSlots} rows`
-    );
+    this.logger.info(`Table loaded`, {
+      database: this.database.name,
+      table: this.name,
+      rows: this.slotManager.getStats().activeSlots,
+    });
   }
 
   /**

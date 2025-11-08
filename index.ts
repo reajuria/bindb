@@ -1,6 +1,8 @@
 import { App } from './http/app';
 import { EngineAPI } from './http/engine-api';
+import { createLogger } from './engine/logger';
 
+const logger = createLogger('main');
 const app = new App();
 const engineAPI = new EngineAPI();
 
@@ -9,19 +11,19 @@ engineAPI.registerRoutes(app);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('Shutting down gracefully...');
+  logger.info('Shutting down gracefully');
   await engineAPI.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('Shutting down gracefully...');
+  logger.info('Shutting down gracefully');
   await engineAPI.close();
   process.exit(0);
 });
 
 const port = process.env.PORT || 3000;
-console.log(`Starting server on port ${port}...`);
+logger.info('Starting server', { port });
 app.listen(port, () => {
-  console.log(`✅ BinDB server ready on port ${port}`);
+  logger.info('BinDB server ready', { port });
 });

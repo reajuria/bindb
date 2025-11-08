@@ -4,6 +4,7 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http';
+import { createLogger } from '../engine/logger';
 import { CORSHandler } from './cors-handler';
 import { RequestParser } from './request-parser';
 import { ResponseFormatter } from './response-formatter';
@@ -26,6 +27,7 @@ export class App {
   private responseFormatter: ResponseFormatter;
   private corsHandler: CORSHandler;
   private server: Server;
+  private logger = createLogger('http-server');
 
   constructor(options: AppOptions = {}) {
     // Initialize specialized components
@@ -130,7 +132,7 @@ export class App {
         _error.message
       );
     } else {
-      console.error(`Error occurred: ${_error.message}`);
+      this.logger.error('Request handling error', _error);
       _errorResponse = this.responseFormatter.createInternalErrorResponse();
     }
 
@@ -154,7 +156,7 @@ export class App {
    */
   listen(port: string | number, callback?: () => void): void {
     this.server.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+      this.logger.info('Server listening', { port });
       if (callback) callback();
     });
   }

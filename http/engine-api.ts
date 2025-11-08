@@ -1,3 +1,4 @@
+import { createLogger } from '../engine/logger';
 import { MissingRequiredFieldError, ValidationError } from '../engine/errors';
 import type { App } from './app';
 import {
@@ -74,6 +75,7 @@ export class EngineAPI {
   private requestCount: number = 0;
   private startTime: number = Date.now();
   private app: App | null = null;
+  private logger = createLogger('engine-api');
 
   constructor(options: EngineAPIConfig = {}) {
     this.config = {
@@ -541,7 +543,7 @@ export class EngineAPI {
    * Handle errors consistently
    */
   private handleError(error: Error, operation: string): any {
-    console.error(`API Error in ${operation}:`, error.message);
+    this.logger.error(`API error in ${operation}`, error, { operation });
 
     const response: any = {
       success: false,
@@ -597,7 +599,7 @@ export class EngineAPI {
    */
   async close(): Promise<void> {
     await this.databaseManager.close();
-    console.log('EngineAPI closed and resources cleaned up');
+    this.logger.info('EngineAPI closed and resources cleaned up');
   }
 
   /**
