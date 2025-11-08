@@ -4,6 +4,13 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http';
+import {
+  createRequestContext,
+  getContext,
+  getRequestDuration,
+  logger,
+  runWithContext,
+} from '../logging/index';
 import { CORSHandler } from './cors-handler';
 import { RequestParser } from './request-parser';
 import { ResponseFormatter } from './response-formatter';
@@ -45,11 +52,29 @@ export class App {
     const server = createServer();
 
     server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
-      try {
-        await this._handleRequest(req, res);
-      } catch (_error) {
-        this._handleError(_error as Error, res);
-      }
+      // Create request context with correlation ID
+      const requestContext = createRequestContext(req);
+
+      // Run request handling within context
+      await runWithContext(requestContext, async () => {
+        try {
+          // Log incoming request
+          logger.info(
+            `Incoming request: ${req.method} ${requestContext.path}`,
+            {
+              correlationId: requestContext.correlationId,
+              requestId: requestContext.requestId,
+              method: req.method,
+              path: requestContext.path,
+              clientIp: requestContext.clientIp,
+            }
+          );
+
+          await this._handleRequest(req, res);
+        } catch (_error) {
+          this._handleError(_error as Error, res);
+        }
+      });
     });
 
     return server;
@@ -126,11 +151,16 @@ export class App {
     let _errorResponse: HttpResponse;
 
     if (_error.name === 'RequestParseError') {
+      logger.warn('Request parsing error', { errorName: _error.name }, _error);
       _errorResponse = this.responseFormatter.createBadRequestResponse(
         _error.message
       );
     } else {
-      console.error(`Error occurred: ${_error.message}`);
+      logger.error(
+        'Internal server error during request processing',
+        { errorName: _error.name },
+        _error
+      );
       _errorResponse = this.responseFormatter.createInternalErrorResponse();
     }
 
@@ -145,6 +175,15 @@ export class App {
     const statusCode = response.statusCode || 200;
     const headers = response.headers || {};
 
+    // Log response with timing using context from AsyncLocalStorage
+    const duration = getRequestDuration();
+    const context = getContext();
+    if (duration !== undefined && context) {
+      logger.logResponse(context.method, context.path, statusCode, duration, {
+        responseSize: response.body?.length || 0,
+      });
+    }
+
     res.writeHead(statusCode, headers);
     res.end(response.body);
   }
@@ -154,7 +193,7 @@ export class App {
    */
   listen(port: string | number, callback?: () => void): void {
     this.server.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+      logger.info(`HTTP server listening on port ${port}`, { port });
       if (callback) callback();
     });
   }

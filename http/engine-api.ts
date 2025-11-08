@@ -1,4 +1,5 @@
 import { MissingRequiredFieldError, ValidationError } from '../engine/errors';
+import { getLoggingContext, logger } from '../logging/index';
 import type { App } from './app';
 import {
   DatabaseManager,
@@ -541,7 +542,17 @@ export class EngineAPI {
    * Handle errors consistently
    */
   private handleError(error: Error, operation: string): any {
-    console.error(`API Error in ${operation}:`, error.message);
+    // Log error with context
+    logger.error(
+      `API error in ${operation}`,
+      {
+        ...getLoggingContext(),
+        operation,
+        errorName: error.name,
+        errorCode: (error as any).code,
+      },
+      error
+    );
 
     const response: any = {
       success: false,
@@ -596,8 +607,9 @@ export class EngineAPI {
    * Close the API and cleanup resources
    */
   async close(): Promise<void> {
+    logger.info('Closing EngineAPI and cleaning up resources');
     await this.databaseManager.close();
-    console.log('EngineAPI closed and resources cleaned up');
+    logger.info('EngineAPI closed successfully');
   }
 
   /**

@@ -1,3 +1,4 @@
+import { logger } from '../logging/index';
 import { readColumn, type BufferSchema } from './buffer-utils';
 import { ID_FIELD } from './constants';
 import {
@@ -110,9 +111,12 @@ export class Table {
     // Load slot data into slot manager
     this.slotManager.loadSlots(slotData);
 
-    console.log(
-      `Loaded ${this.name} with ${this.slotManager.getStats().activeSlots} rows`
-    );
+    logger.info(`Table loaded: ${this.database.name}.${this.name}`, {
+      database: this.database.name,
+      table: this.name,
+      activeSlots: this.slotManager.getStats().activeSlots,
+      totalSlots: slot,
+    });
   }
 
   /**

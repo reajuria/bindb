@@ -62,6 +62,8 @@ docker run -p 8080:8080 bindb
 |----------|---------|-------------|
 | `PORT` | `8080` | Server port (Cloud Run sets this automatically) |
 | `NODE_ENV` | `production` | Environment mode |
+| `LOG_LEVEL` | `INFO` (prod) / `DEBUG` (dev) | Logging level (DEBUG, INFO, WARN, ERROR) |
+| `BINDB_STORAGE_PATH` | `./data` | Database storage directory |
 
 ### CORS Configuration
 
@@ -114,10 +116,10 @@ npm run benchmark:quick   # Quick benchmark subset
 ```
 
 ### Test Structure
-- **Unit Tests**: `test/*.test.ts` - Core engine functionality (43 tests)
+- **Unit Tests**: `test/*.test.ts` - Core engine functionality and logging (69 tests)
 - **E2E Tests**: `test-e2e/*.test.ts` - End-to-end API testing (15 tests)
 - **Benchmarks**: `benchmarks/*.bench.ts` - Performance testing (4 tests)
-- **Total Coverage**: 62 tests with 100% pass rate and detailed coverage reports
+- **Total Coverage**: 113 tests with 100% pass rate and detailed coverage reports
 
 ## 🏗️ Development
 
@@ -139,6 +141,83 @@ npm run lint
 npm run lint:fix
 npm run format
 ```
+
+## 📝 Centralized Logging
+
+BinDB features a comprehensive centralized logging system for production monitoring and debugging:
+
+### Features
+
+- **Structured JSON Logging**: Cloud-native structured logs for easy parsing and analysis
+- **Request Correlation**: Automatic correlation IDs for tracking requests across the system
+- **Performance Tracking**: Built-in timing and performance metrics
+- **Environment-Aware**: Different log levels for development vs production
+- **Context Propagation**: Request context automatically propagated through async operations
+- **Error Tracking**: Comprehensive error logging with stack traces and metadata
+
+### Log Levels
+
+- **DEBUG**: Detailed information for debugging (development only)
+- **INFO**: General informational messages about system operation
+- **WARN**: Warning messages for potentially problematic situations
+- **ERROR**: Error messages for failures and exceptions
+
+### Configuration
+
+Set the log level using the `LOG_LEVEL` environment variable:
+
+```bash
+# Development - verbose logging
+LOG_LEVEL=DEBUG npm start
+
+# Production - essential logs only
+LOG_LEVEL=INFO npm start
+
+# Critical errors only
+LOG_LEVEL=ERROR npm start
+```
+
+### Log Format
+
+In production, logs are output as structured JSON:
+
+```json
+{
+  "timestamp": "2025-11-08T17:05:41.599Z",
+  "level": "INFO",
+  "message": "Database created successfully: mydb",
+  "context": {
+    "correlationId": "f74265e42f76aaf8d74cd3e8ba5cc285",
+    "requestId": "a83e6634ae160bde",
+    "database": "mydb",
+    "duration": 15
+  }
+}
+```
+
+In development, logs are pretty-printed for readability:
+
+```
+[2025-11-08T17:05:41.599Z] [INFO] [f74265e42f76aaf8d74cd3e8ba5cc285] Database created successfully: mydb {"database":"mydb","duration":15}
+```
+
+### Request Tracking
+
+Every HTTP request is assigned a unique correlation ID that tracks the request through the entire system:
+
+- **X-Correlation-ID Header**: Pass a correlation ID in the request header to track requests across services
+- **Request ID**: Each request also gets a unique request ID for internal tracking
+- **Performance Metrics**: Automatic timing of all operations with duration logging
+
+### Logged Operations
+
+- HTTP requests and responses with timing
+- Database operations (create, insert, update, delete)
+- Table loading and initialization
+- Bulk operations with batch statistics
+- Error conditions with full context
+- Server lifecycle events (startup, shutdown)
+- Uncaught exceptions and unhandled rejections
 
 ## 🖥️ Admin Interface
 
@@ -187,12 +266,14 @@ open http://localhost:3000/admin
 - **HTTP API**: RESTful API with 14 endpoints
 - **Type System**: Advanced TypeScript patterns and type safety
 - **Caching**: LRU cache with performance optimization
+- **Centralized Logging**: Structured logging with request correlation
 - **Testing**: Comprehensive unit and integration tests
 
 ### Key Features
 - 🔒 **Complete Type Safety**: Every operation compile-time verified
 - ⚡ **High Performance**: Sub-millisecond operations with intelligent caching
 - 🌐 **Full REST API**: Complete CRUD operations with type validation
+- 📝 **Centralized Logging**: Structured JSON logs with correlation tracking
 - 🧪 **Comprehensive Testing**: 100% test coverage with CI integration
 - 📚 **Pure TypeScript**: Zero JavaScript legacy code
 - ☁️ **Cloud Native**: Ready for containerized deployment
@@ -217,10 +298,11 @@ Modern Jest-based testing with comprehensive coverage:
 ## 🏆 Production Ready
 
 - ✅ Zero TypeScript compilation errors
-- ✅ 100% test pass rate (90/90 tests)
+- ✅ 100% test pass rate (113/113 tests)
 - ✅ Jest-powered testing with coverage reporting
 - ✅ Performance benchmarking with regression detection
 - ✅ Complete type coverage
+- ✅ Centralized structured logging with request correlation
 - ✅ CI/CD integration with automated quality gates
 - ✅ High-performance architecture (100k+ ops/sec)
 - ✅ Enterprise-grade patterns and scalability
@@ -230,5 +312,6 @@ Modern Jest-based testing with comprehensive coverage:
 - ✅ Web-based admin interface
 - ✅ Complete database management UI
 - ✅ Comprehensive CORS support
+- ✅ Production-ready error handling and logging
 
 Built with ❤️, TypeScript, and Jest for maximum reliability, performance, and developer experience.
