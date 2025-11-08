@@ -6,6 +6,7 @@ import {
 } from 'node:http';
 import {
   createRequestContext,
+  getContext,
   getRequestDuration,
   logger,
   runWithContext,
@@ -174,15 +175,11 @@ export class App {
     const statusCode = response.statusCode || 200;
     const headers = response.headers || {};
 
-    // Log response with timing
+    // Log response with timing using context from AsyncLocalStorage
     const duration = getRequestDuration();
-    if (duration !== undefined) {
-      const method = (res.req as IncomingMessage)?.method || 'UNKNOWN';
-      const url = new URL(
-        (res.req as IncomingMessage)?.url || '/',
-        `http://${(res.req as IncomingMessage)?.headers.host || 'localhost'}`
-      );
-      logger.logResponse(method, url.pathname, statusCode, duration, {
+    const context = getContext();
+    if (duration !== undefined && context) {
+      logger.logResponse(context.method, context.path, statusCode, duration, {
         responseSize: response.body?.length || 0,
       });
     }
